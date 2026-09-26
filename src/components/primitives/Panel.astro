@@ -1,0 +1,85 @@
+---
+/**
+ * A polymorphic primitive that provides the shared structure and appearance
+ * used by panel-like feature components.
+ *
+ * The `as` prop determines which HTML element is rendered as the panel root,
+ * such as `section`, `article`, `aside`, `nav`, or `div`. An optional `title`
+ * renders a heading whose level is selected through `headingLevel`, defaulting
+ * to `h2`.
+ *
+ * `class:list` always applies the primitive `panel` class and appends any
+ * additional class supplied by the parent component. This additional class
+ * acts as a component-specific styling hook without replacing the panel’s
+ * base styles.
+ *
+ * Astro automatically scopes the styles below to markup rendered by this
+ * component. During compilation, selectors such as `.panel` and
+ * `.panel__heading` receive a generated scope marker, preventing these rules
+ * from affecting similarly named elements elsewhere. The exact compiled
+ * selector depends on Astro’s scoped-style strategy and may resemble
+ * `.panel:where(.astro-...)`.
+ *
+ * Remaining HTML attributes are forwarded to the root element. This also
+ * preserves Astro’s generated scope attributes when the component is styled
+ * by its parent.
+ *
+ * Slotted content remains owned by the parent component. Panel provides only
+ * the outer container and optional heading; the parent remains responsible
+ * for the content’s structure and component-specific styling.
+ */
+
+import type { Polymorphic } from "astro/types";
+
+type PanelTag = "section" | "article" | "aside" | "nav" | "div";
+
+type HeadingTag = "h1" | "h2";
+
+type Props<Tag extends PanelTag> = Polymorphic<{
+    as: Tag;
+    title?: string;
+    headingLevel?: HeadingTag;
+}>;
+
+const {
+    as: Tag,
+    title,
+    headingLevel: Heading = "h2",
+    class: parentClass,
+    ...attributes
+} = Astro.props;
+---
+
+<Tag 
+    class:list={["panel", parentClass]} 
+    {...attributes}
+        >
+    {title && 
+        <Heading class="panel__heading">
+            {title}
+        </Heading>}
+
+    <slot />
+</Tag>
+
+<style>
+    /*
+     * Panel consumes semantic tokens so palette and typography changes remain
+     * centralized in global.css rather than diverging between feature panels.
+     */
+    .panel {
+        overflow: hidden;
+        border: var(--border-width) solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card-bg);
+        /* box-shadow: var(--shadow); */
+    }
+
+    .panel__heading {
+        margin: 0;
+        color: var(--text-strong);
+        font-size: var(--font-md);
+        font-weight: var(--fw-bold);
+        line-height: 1.2;
+    }
+</style>

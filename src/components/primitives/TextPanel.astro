@@ -1,0 +1,39 @@
+---
+import Panel from "@components/primitives/Panel.astro";
+
+type ContainerTag =
+    | "section"
+    | "article"
+    | "aside"
+    | "nav"
+    | "div";
+
+interface Props {
+    as?: ContainerTag;
+    title?: string;
+}
+
+const {
+    as = "section",
+    title,
+} = Astro.props;
+---
+
+<Panel
+    as={as}
+    class="text-container"
+    title={title}
+>
+    <div class="text-container__body">
+        <slot />
+    </div>
+</Panel>
+
+<style>
+    /* Scoped Panel override */
+    .text-container > :global(.panel__heading) {
+        padding: 0.82rem var(--space-md);
+        border-bottom: 1px solid var(--border);
+    }
+    /* Scoped Panel override */
+</style>

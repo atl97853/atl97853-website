@@ -1,0 +1,1589 @@
+---
+/**
+ * A compact, framework-free playlist intended for the site sidebar.
+ *
+ * Place each referenced audio file in public/audio/ and add its title,
+ * artist, source, and MIME type to the playlist below.
+ */
+
+import Panel from "@components/primitives/Panel.astro";
+
+type AudioMimeType = "audio/mpeg" | "audio/ogg" | "audio/wav";
+
+interface AudioTrack {
+    title: string;
+    artist: string;
+    src: string;
+    type: AudioMimeType;
+}
+
+// The controls and track counter adapt automatically as entries are added or
+// removed here. The tuple constraint also prevents an empty playlist, which
+// guarantees that the initial <source> always has a valid track.
+const playlist = [
+    { 
+        title: "Bluebird",
+        artist: "Still & Bense",
+        src: "/audio/07-bluebird-still-and-bense.mp3",
+        type: "audio/mpeg",
+    },
+    { 
+        title: "Crave you",
+        artist: "Flight Facilities feat. Giselle",
+        src: "/audio/08_crave_you_flight_facilities_feat_giselle.mp3",
+        type: "audio/mpeg",
+    },
+    { 
+        title: "Space Feeling",
+        artist: "The Bird Day",
+        src: "/audio/09_space_feeling_the_bird_day.mp3",
+        type: "audio/mpeg",
+    },
+] as const satisfies readonly [AudioTrack, ...AudioTrack[]];
+
+const firstTrack = playlist[0];
+---
+
+<Panel
+    as="aside"
+    class="music-player"
+    aria-label="Music player"
+>
+    <site-audio-player
+        class="music-player__player"
+        data-playlist={JSON.stringify(playlist)}
+        data-playing="false"
+    >
+        <header class="music-player__header">
+            <div class="music-player__title-bar">
+                <p class="music-player__window-title">Music player</p>
+
+                <span class="music-player__status" aria-live="polite">
+                    <span data-status>Now playing</span>
+                    <span aria-hidden="true"> · </span>
+                    <span data-track-position>1/{playlist.length}</span>
+                </span>
+            </div>
+
+            <div class="music-player__display">
+                <span class="music-player__ticker">
+                    {
+                        /**
+                         * The second copy makes the ticker loop without a
+                         * visible jump. It is hidden whenever playback pauses.
+                         */
+                    }
+                    <span class="music-player__ticker-track">
+                        <span class="music-player__track-info">
+                            <strong
+                                class="music-player__track-title"
+                                data-track-title
+                            >
+                                {firstTrack.title}
+                            </strong>
+                            <span aria-hidden="true"> — </span>
+                            <span data-track-artist>{firstTrack.artist}</span>
+                        </span>
+
+                        <span
+                            class="music-player__track-info music-player__track-info--copy"
+                            aria-hidden="true"
+                        >
+                            <strong
+                                class="music-player__track-title"
+                                data-track-title
+                            >
+                                {firstTrack.title}
+                            </strong>
+                            <span> — </span>
+                            <span data-track-artist>{firstTrack.artist}</span>
+                        </span>
+                    </span>
+                </span>
+            </div>
+        </header>
+
+        <div class="music-player__controls">
+            <div class="music-player__transport">
+                <button
+                    class="music-player__transport-button"
+                    type="button"
+                    data-previous-button
+                    aria-label="Previous track"
+                >
+                    <svg
+                        class="music-player__transport-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M5 5h2v14H5V5Zm14 0v14L8 12l11-7Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </button>
+
+                <button
+                    class="music-player__transport-button music-player__transport-button--play"
+                    type="button"
+                    data-play-button
+                    aria-label="Play"
+                >
+                    <svg
+                        class="music-player__transport-icon music-player__transport-icon--play"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path d="m7 4 13 8L7 20V4Z" fill="currentColor"></path>
+                    </svg>
+
+                    <svg
+                        class="music-player__transport-icon music-player__transport-icon--pause"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M6 4h4v16H6V4Zm8 0h4v16h-4V4Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </button>
+
+                <button
+                    class="music-player__transport-button"
+                    type="button"
+                    data-next-button
+                    aria-label="Next track"
+                >
+                    <svg
+                        class="music-player__transport-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M17 5h2v14h-2V5ZM5 5l11 7-11 7V5Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="music-player__volume">
+                <input
+                    class="music-player__volume-input"
+                    type="range"
+                    min="0"
+                    max="1"
+                    value="0.42"
+                    step="0.01"
+                    data-volume
+                    aria-label="Volume"
+                />
+
+                <button
+                    class="music-player__mute-button"
+                    type="button"
+                    data-mute-button
+                    data-muted="false"
+                    aria-label="Mute"
+                    aria-pressed="false"
+                >
+                    <svg
+                        class="music-player__volume-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"
+                        ></path>
+                        <path
+                            class="music-player__volume-waves"
+                            d="M16 8.25a5 5 0 0 1 0 7.5M18.5 5.75a8.5 8.5 0 0 1 0 12.5"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-width="1.6"></path>
+                        <path
+                            class="music-player__volume-muted"
+                            d="m16.5 9 5 5m0-5-5 5"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-linecap="round"
+                            stroke-width="1.8"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="music-player__seeking-row">
+            <input
+                class="music-player__seeking"
+                type="range"
+                min="0"
+                max="0"
+                value="0"
+                step="0.1"
+                data-seeking
+                aria-label="Seek through track"
+                disabled
+            />
+
+            <span class="music-player__time">
+                <span data-current-time>0:00</span>
+                <span aria-hidden="true"> / </span>
+                <span data-duration>0:00</span>
+            </span>
+        </div>
+
+        <audio class="music-player__audio" data-audio preload="metadata">
+            <source
+                data-audio-source
+                src={firstTrack.src}
+                type={firstTrack.type}
+            />
+        </audio>
+    </site-audio-player>
+</Panel>
+
+<script>
+    /**
+     * Framework-free audio player with session persistence and a subtle
+     * Web Audio chorus. State is scoped to the current tab so navigating away
+     * from the homepage does not lose the listener's place.
+     */
+
+    type AudioMimeType = "audio/mpeg" | "audio/ogg" | "audio/wav";
+
+    interface AudioTrack {
+        title: string;
+        artist: string;
+        src: string;
+        type: AudioMimeType;
+    }
+
+    interface PlayerState {
+        trackSrc: string;
+        currentTime: number;
+        volume: number;
+        muted: boolean;
+        wasPlaying: boolean;
+    }
+
+    const PLAYER_STATE_KEY = "atl97853:music-player:v1";
+    const DEFAULT_VOLUME = 0.42;
+
+    // A very light chorus: mostly dry signal, shallow modulation, and a little
+    // output headroom so the effect adds width without sounding obviously
+    // processed or making loud masters uncomfortable.
+    const CHORUS_DELAY_SECONDS = 0.018;
+    const CHORUS_DEPTH_SECONDS = 0.002;
+    const CHORUS_RATE_HZ = 0.45;
+    const CHORUS_DRY_GAIN = 0.92;
+    const CHORUS_WET_GAIN = 0.08;
+    const CHORUS_OUTPUT_GAIN = 0.9;
+
+    const SUPPORTED_AUDIO_TYPES = new Set<AudioMimeType>([
+        "audio/mpeg",
+        "audio/ogg",
+        "audio/wav",
+    ]);
+
+    function getRequiredElement<T extends Element>(
+        root: ParentNode,
+        selector: string,
+    ): T {
+        const element = root.querySelector<T>(selector);
+
+        if (!element) {
+            throw new Error(`MusicPlayer is missing ${selector}.`);
+        }
+
+        return element;
+    }
+
+    function isAudioTrack(value: unknown): value is AudioTrack {
+        if (!value || typeof value !== "object") return false;
+
+        const track = value as Record<string, unknown>;
+        const hasText = (property: "title" | "artist" | "src") => {
+            const content = track[property];
+            return typeof content === "string" && content.trim().length > 0;
+        };
+
+        return (
+            hasText("title") &&
+            hasText("artist") &&
+            hasText("src") &&
+            typeof track.type === "string" &&
+            SUPPORTED_AUDIO_TYPES.has(track.type as AudioMimeType)
+        );
+    }
+
+    function parsePlaylist(value: string | undefined): AudioTrack[] {
+        try {
+            const parsed: unknown = JSON.parse(value ?? "[]");
+            return Array.isArray(parsed) ? parsed.filter(isAudioTrack) : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function isPlayerState(value: unknown): value is PlayerState {
+        if (!value || typeof value !== "object") return false;
+
+        const state = value as Record<string, unknown>;
+
+        return (
+            typeof state.trackSrc === "string" &&
+            state.trackSrc.length > 0 &&
+            typeof state.currentTime === "number" &&
+            Number.isFinite(state.currentTime) &&
+            state.currentTime >= 0 &&
+            typeof state.volume === "number" &&
+            Number.isFinite(state.volume) &&
+            state.volume >= 0 &&
+            state.volume <= 1 &&
+            typeof state.muted === "boolean" &&
+            typeof state.wasPlaying === "boolean"
+        );
+    }
+
+    function readPlayerState(): PlayerState | null {
+        try {
+            const stored = sessionStorage.getItem(PLAYER_STATE_KEY);
+            if (!stored) return null;
+
+            const parsed: unknown = JSON.parse(stored);
+            return isPlayerState(parsed) ? parsed : null;
+        } catch {
+            // Storage can be unavailable in restrictive/private contexts.
+            return null;
+        }
+    }
+
+    function writePlayerState(state: PlayerState) {
+        try {
+            sessionStorage.setItem(PLAYER_STATE_KEY, JSON.stringify(state));
+        } catch {
+            // Persistence is optional; playback must still work without it.
+        }
+    }
+
+    function formatTime(seconds: number): string {
+        if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    }
+
+    function resolveTrackUrl(source: string): string {
+        try {
+            return new URL(source, document.baseURI).href;
+        } catch {
+            return source;
+        }
+    }
+
+    function clamp(value: number, minimum: number, maximum: number) {
+        return Math.min(maximum, Math.max(minimum, value));
+    }
+
+    function updateRangeFill(
+        input: HTMLInputElement,
+        value: number,
+        maximum: number,
+    ) {
+        const percentage =
+            maximum > 0 ? clamp((value / maximum) * 100, 0, 100) : 0;
+        input.style.setProperty("--range-position", `${percentage}%`);
+    }
+
+    class SiteAudioPlayer extends HTMLElement {
+        private abortController: AbortController | null = null;
+        private audio: HTMLAudioElement | null = null;
+        private persistState: (() => void) | null = null;
+        private audioContext: AudioContext | null = null;
+        private chorusCleanup: (() => void) | null = null;
+
+        /**
+         * Attach a gentle modulated-delay chorus. The graph is created lazily
+         * on playback so browsers can apply their normal user-gesture policy.
+         * If Web Audio cannot start, the media element is left untouched and
+         * continues with ordinary dry playback.
+         */
+        private async ensureChorusEffect(audio: HTMLAudioElement) {
+            if (this.audioContext) {
+                if (this.audioContext.state === "suspended") {
+                    try {
+                        await this.audioContext.resume();
+                    } catch {
+                        // The next user-initiated Play can try again.
+                    }
+                }
+
+                return;
+            }
+
+            if (typeof AudioContext === "undefined") return;
+
+            const context = new AudioContext();
+
+            try {
+                if (context.state === "suspended") {
+                    await context.resume();
+                }
+
+                // Do not take ownership of the media element unless the
+                // context can actually render audio.
+                if (context.state !== "running") {
+                    await context.close();
+                    return;
+                }
+
+                const dryGain = context.createGain();
+                const delay = context.createDelay(0.05);
+                const wetGain = context.createGain();
+                const outputGain = context.createGain();
+                const oscillator = context.createOscillator();
+                const modulationGain = context.createGain();
+
+                dryGain.gain.value = CHORUS_DRY_GAIN;
+                delay.delayTime.value = CHORUS_DELAY_SECONDS;
+                wetGain.gain.value = CHORUS_WET_GAIN;
+                outputGain.gain.value = CHORUS_OUTPUT_GAIN;
+                oscillator.frequency.value = CHORUS_RATE_HZ;
+                modulationGain.gain.value = CHORUS_DEPTH_SECONDS;
+
+                // Build everything downstream before redirecting the <audio>.
+                dryGain.connect(outputGain);
+                delay.connect(wetGain);
+                wetGain.connect(outputGain);
+                oscillator.connect(modulationGain);
+                modulationGain.connect(delay.delayTime);
+                outputGain.connect(context.destination);
+
+                const source = context.createMediaElementSource(audio);
+
+                // Keep a direct path until the chorus graph is fully live. If
+                // any subsequent connection fails, playback remains audible.
+                source.connect(context.destination);
+
+                try {
+                    source.connect(dryGain);
+                    source.connect(delay);
+                    oscillator.start();
+                    source.disconnect(context.destination);
+                } catch {
+                    try {
+                        oscillator.stop();
+                    } catch {
+                        // oscillator.start() may not have completed.
+                    }
+
+                    try {
+                        source.disconnect(dryGain);
+                    } catch {
+                        // The connection may not have been created.
+                    }
+
+                    try {
+                        source.disconnect(delay);
+                    } catch {
+                        // The connection may not have been created.
+                    }
+
+                    this.audioContext = context;
+                    this.chorusCleanup = () => {
+                        source.disconnect();
+                        dryGain.disconnect();
+                        delay.disconnect();
+                        wetGain.disconnect();
+                        outputGain.disconnect();
+                        oscillator.disconnect();
+                        modulationGain.disconnect();
+                        void context.close();
+                    };
+                    return;
+                }
+
+                this.audioContext = context;
+                this.chorusCleanup = () => {
+                    try {
+                        oscillator.stop();
+                    } catch {
+                        // It may already be stopped during document teardown.
+                    }
+
+                    oscillator.disconnect();
+                    modulationGain.disconnect();
+                    source.disconnect();
+                    dryGain.disconnect();
+                    delay.disconnect();
+                    wetGain.disconnect();
+                    outputGain.disconnect();
+                    void context.close();
+                };
+            } catch {
+                if (context.state !== "closed") {
+                    void context.close();
+                }
+            }
+        }
+
+        connectedCallback() {
+            if (this.abortController) return;
+
+            const get = <T extends Element>(selector: string) =>
+                getRequiredElement<T>(this, selector);
+
+            const audio = get<HTMLAudioElement>("[data-audio]");
+            const audioSource = get<HTMLSourceElement>("[data-audio-source]");
+            const playButton = get<HTMLButtonElement>("[data-play-button]");
+            const previousButton = get<HTMLButtonElement>(
+                "[data-previous-button]",
+            );
+            const nextButton = get<HTMLButtonElement>("[data-next-button]");
+            const muteButton = get<HTMLButtonElement>("[data-mute-button]");
+            const seeking = get<HTMLInputElement>("[data-seeking]");
+            const volume = get<HTMLInputElement>("[data-volume]");
+            const currentTime = get<HTMLElement>("[data-current-time]");
+            const duration = get<HTMLElement>("[data-duration]");
+            const status = get<HTMLElement>("[data-status]");
+            const trackPosition = get<HTMLElement>("[data-track-position]");
+            const trackTitles =
+                this.querySelectorAll<HTMLElement>("[data-track-title]");
+            const trackArtists =
+                this.querySelectorAll<HTMLElement>("[data-track-artist]");
+            const playlist = parsePlaylist(this.dataset.playlist);
+
+            if (playlist.length === 0) {
+                status.textContent = "Playlist unavailable";
+
+                [
+                    playButton,
+                    previousButton,
+                    nextButton,
+                    muteButton,
+                    seeking,
+                    volume,
+                ].forEach((control) => {
+                    control.disabled = true;
+                });
+
+                return;
+            }
+
+            const abortController = new AbortController();
+            const listenerOptions = { signal: abortController.signal };
+
+            this.abortController = abortController;
+            this.audio = audio;
+
+            const savedState = readPlayerState();
+            const activeSource = audio.currentSrc || audioSource.src;
+            const activeTrackIndex = playlist.findIndex(
+                (track) => resolveTrackUrl(track.src) === activeSource,
+            );
+            const savedTrackIndex = savedState
+                ? playlist.findIndex(
+                      (track) =>
+                          resolveTrackUrl(track.src) ===
+                          resolveTrackUrl(savedState.trackSrc),
+                  )
+                : -1;
+            const canRestoreTrack = savedTrackIndex >= 0;
+
+            let currentTrackIndex = canRestoreTrack
+                ? savedTrackIndex
+                : Math.max(0, activeTrackIndex);
+            let hasAudioError = false;
+            let isLoading = false;
+            let isSeeking = false;
+            let isChangingTrack = false;
+            let isRestoringState = canRestoreTrack;
+            let pendingRestoreTime = canRestoreTrack
+                ? savedState!.currentTime
+                : null;
+            let shouldResumeAfterRestore =
+                canRestoreTrack && savedState!.wasPlaying;
+            let lastPersistedSecond = -1;
+            let sourceRevision = 0;
+
+            // Volume/mute preference remains useful even if a previously saved
+            // track was later removed from the playlist.
+            const restoredVolume = savedState?.volume ?? DEFAULT_VOLUME;
+            audio.volume = clamp(restoredVolume, 0, 1);
+            audio.muted = savedState?.muted ?? false;
+
+            let lastAudibleVolume =
+                audio.volume > 0 ? audio.volume : DEFAULT_VOLUME;
+
+            const persistPlaybackState = (force = false) => {
+                // Never replace the saved timestamp with 0 while metadata for
+                // the saved track is still being restored.
+                if (isRestoringState || isChangingTrack) return;
+
+                if (!force) {
+                    const second = Math.floor(audio.currentTime);
+                    if (second === lastPersistedSecond) return;
+                    lastPersistedSecond = second;
+                }
+
+                const track = playlist[currentTrackIndex];
+                if (!track) return;
+
+                writePlayerState({
+                    trackSrc: track.src,
+                    currentTime: Number.isFinite(audio.currentTime)
+                        ? Math.max(0, audio.currentTime)
+                        : 0,
+                    volume: audio.volume,
+                    muted: audio.muted,
+                    wasPlaying: !audio.paused && !audio.ended,
+                });
+            };
+
+            this.persistState = () => persistPlaybackState(true);
+
+            const updatePlaybackState = () => {
+                const isPlaying = !audio.paused && !audio.ended;
+
+                this.dataset.playing = String(isPlaying);
+                playButton.setAttribute(
+                    "aria-label",
+                    isPlaying ? "Pause" : "Play",
+                );
+
+                if (hasAudioError) {
+                    status.textContent = "Audio unavailable";
+                } else if (isLoading) {
+                    status.textContent = "Loading";
+                } else if (isPlaying || audio.currentTime === 0) {
+                    status.textContent = "Now playing";
+                } else {
+                    status.textContent = audio.ended ? "Finished" : "Paused";
+                }
+            };
+
+            const updateMuteState = () => {
+                const isMuted = audio.muted || audio.volume === 0;
+
+                if (audio.volume > 0) {
+                    lastAudibleVolume = audio.volume;
+                }
+
+                muteButton.dataset.muted = String(isMuted);
+                muteButton.setAttribute(
+                    "aria-label",
+                    isMuted ? "Unmute" : "Mute",
+                );
+                muteButton.setAttribute("aria-pressed", String(isMuted));
+                volume.value = String(audio.volume);
+                updateRangeFill(volume, audio.volume, 1);
+            };
+
+            const updateSeekingRange = () => {
+                const hasDuration =
+                    Number.isFinite(audio.duration) && audio.duration > 0;
+
+                seeking.disabled = hasAudioError || !hasDuration;
+                seeking.max = hasDuration ? String(audio.duration) : "0";
+                duration.textContent = formatTime(audio.duration);
+
+                if (!isSeeking) {
+                    seeking.value = String(audio.currentTime);
+                    updateRangeFill(seeking, audio.currentTime, audio.duration);
+                }
+            };
+
+            const updateTime = () => {
+                if (isSeeking) return;
+
+                seeking.value = String(audio.currentTime);
+                currentTime.textContent = formatTime(audio.currentTime);
+                updateRangeFill(seeking, audio.currentTime, audio.duration);
+            };
+
+            const playAudio = async (restoring = false) => {
+                const requestedRevision = sourceRevision;
+
+                try {
+                    // Start both from the same call stack. This gives browsers
+                    // the best chance to associate them with the Play gesture.
+                    const chorusPromise = this.ensureChorusEffect(audio);
+                    const playbackPromise = audio.play();
+
+                    await playbackPromise;
+                    await chorusPromise;
+                } catch {
+                    if (requestedRevision !== sourceRevision) return;
+
+                    isLoading = false;
+                    updatePlaybackState();
+                    status.textContent = restoring ? "Paused" : "Unable to play";
+
+                    // If autoplay is blocked while restoring, keep the saved
+                    // "was playing" state intact. The restored track/time are
+                    // already correct, so the next Play continues from there.
+                    if (!restoring) {
+                        persistPlaybackState(true);
+                    }
+                }
+            };
+
+            const updateTrackMetadata = (track: AudioTrack) => {
+                trackTitles.forEach((element) => {
+                    element.textContent = track.title;
+                });
+                trackArtists.forEach((element) => {
+                    element.textContent = track.artist;
+                });
+                trackPosition.textContent = `${currentTrackIndex + 1}/${playlist.length}`;
+            };
+
+            const restoreSavedPlayback = () => {
+                if (!isRestoringState || pendingRestoreTime === null) return;
+                if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
+                    return;
+                }
+
+                // Avoid restoring exactly on the media endpoint, which would
+                // immediately trigger ended on some browsers.
+                const maximumTime = Math.max(0, audio.duration - 0.1);
+                audio.currentTime = clamp(pendingRestoreTime, 0, maximumTime);
+                pendingRestoreTime = null;
+                isRestoringState = false;
+                lastPersistedSecond = Math.floor(audio.currentTime);
+
+                updateSeekingRange();
+                updateTime();
+                updatePlaybackState();
+
+                if (shouldResumeAfterRestore) {
+                    shouldResumeAfterRestore = false;
+                    void playAudio(true);
+                } else {
+                    persistPlaybackState(true);
+                }
+            };
+
+            const loadTrack = (index: number, autoplay = false) => {
+                isChangingTrack = true;
+                isRestoringState = false;
+                pendingRestoreTime = null;
+                shouldResumeAfterRestore = false;
+
+                audio.pause();
+                currentTrackIndex =
+                    (index + playlist.length) % playlist.length;
+
+                const track = playlist[currentTrackIndex]!;
+
+                sourceRevision += 1;
+                hasAudioError = false;
+                isLoading = true;
+                audioSource.src = track.src;
+                audioSource.type = track.type;
+                updateTrackMetadata(track);
+                currentTime.textContent = "0:00";
+                duration.textContent = "0:00";
+                seeking.value = "0";
+                seeking.max = "0";
+                seeking.disabled = true;
+                updateRangeFill(seeking, 0, 0);
+                playButton.disabled = false;
+
+                audio.load();
+                isChangingTrack = false;
+                lastPersistedSecond = -1;
+                updatePlaybackState();
+                persistPlaybackState(true);
+
+                if (autoplay) {
+                    void playAudio();
+                }
+            };
+
+            playButton.addEventListener(
+                "click",
+                () => {
+                    if (audio.paused) {
+                        void playAudio();
+                    } else {
+                        audio.pause();
+                    }
+                },
+                listenerOptions,
+            );
+
+            previousButton.addEventListener(
+                "click",
+                () => loadTrack(currentTrackIndex - 1, true),
+                listenerOptions,
+            );
+
+            nextButton.addEventListener(
+                "click",
+                () => loadTrack(currentTrackIndex + 1, true),
+                listenerOptions,
+            );
+
+            muteButton.addEventListener(
+                "click",
+                () => {
+                    const isMuted = audio.muted || audio.volume === 0;
+
+                    if (isMuted) {
+                        if (audio.volume === 0) {
+                            audio.volume = lastAudibleVolume;
+                        }
+                        audio.muted = false;
+                    } else {
+                        audio.muted = true;
+                    }
+                },
+                listenerOptions,
+            );
+
+            seeking.addEventListener(
+                "pointerdown",
+                () => {
+                    isSeeking = true;
+                },
+                listenerOptions,
+            );
+
+            seeking.addEventListener(
+                "input",
+                () => {
+                    const requestedTime = seeking.valueAsNumber;
+                    if (!Number.isFinite(requestedTime)) return;
+
+                    audio.currentTime = requestedTime;
+                    currentTime.textContent = formatTime(requestedTime);
+                    updateRangeFill(seeking, requestedTime, audio.duration);
+                },
+                listenerOptions,
+            );
+
+            const finishSeeking = () => {
+                if (!isSeeking) return;
+
+                isSeeking = false;
+                updateTime();
+                persistPlaybackState(true);
+            };
+
+            seeking.addEventListener("pointerup", finishSeeking, listenerOptions);
+            seeking.addEventListener(
+                "pointercancel",
+                finishSeeking,
+                listenerOptions,
+            );
+            seeking.addEventListener("change", finishSeeking, listenerOptions);
+            window.addEventListener("pointerup", finishSeeking, listenerOptions);
+
+            volume.addEventListener(
+                "input",
+                () => {
+                    const requestedVolume = volume.valueAsNumber;
+                    if (!Number.isFinite(requestedVolume)) return;
+
+                    const nextVolume = clamp(requestedVolume, 0, 1);
+
+                    if (nextVolume > 0) {
+                        lastAudibleVolume = nextVolume;
+                    }
+
+                    audio.volume = nextVolume;
+                    audio.muted = nextVolume === 0;
+                    updateRangeFill(volume, nextVolume, 1);
+                    persistPlaybackState(true);
+                },
+                listenerOptions,
+            );
+
+            audio.addEventListener(
+                "loadedmetadata",
+                () => {
+                    isLoading = false;
+                    updateSeekingRange();
+                    restoreSavedPlayback();
+                    updatePlaybackState();
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "durationchange",
+                () => {
+                    updateSeekingRange();
+                    restoreSavedPlayback();
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "timeupdate",
+                () => {
+                    updateTime();
+                    persistPlaybackState();
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "play",
+                () => {
+                    isLoading = false;
+                    updatePlaybackState();
+                    persistPlaybackState(true);
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "pause",
+                () => {
+                    updatePlaybackState();
+                    persistPlaybackState(true);
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "volumechange",
+                () => {
+                    updateMuteState();
+                    persistPlaybackState(true);
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "ended",
+                () => {
+                    if (playlist.length > 1) {
+                        loadTrack(currentTrackIndex + 1, true);
+                    } else {
+                        updatePlaybackState();
+                        persistPlaybackState(true);
+                    }
+                },
+                listenerOptions,
+            );
+            audio.addEventListener(
+                "error",
+                () => {
+                    hasAudioError = true;
+                    isLoading = false;
+                    playButton.disabled = true;
+                    seeking.disabled = true;
+                    updatePlaybackState();
+                    persistPlaybackState(true);
+                },
+                listenerOptions,
+            );
+
+            // pagehide covers full-page navigation; disconnectedCallback
+            // covers Astro client-side navigation/removal of the homepage.
+            window.addEventListener(
+                "pagehide",
+                () => persistPlaybackState(true),
+                listenerOptions,
+            );
+
+            const hasMultipleTracks = playlist.length > 1;
+            const initialTrack = playlist[currentTrackIndex]!;
+            const sourceNeedsChange =
+                resolveTrackUrl(initialTrack.src) !== activeSource;
+
+            previousButton.disabled = !hasMultipleTracks;
+            nextButton.disabled = !hasMultipleTracks;
+            audioSource.src = initialTrack.src;
+            audioSource.type = initialTrack.type;
+
+            updateTrackMetadata(initialTrack);
+            updateMuteState();
+            updateRangeFill(volume, audio.volume, 1);
+
+            if (sourceNeedsChange || isRestoringState) {
+                sourceRevision += 1;
+                isLoading = true;
+                audio.load();
+            }
+
+            if (audio.error) {
+                hasAudioError = true;
+                playButton.disabled = true;
+                seeking.disabled = true;
+            }
+
+            updateSeekingRange();
+            updateTime();
+            updatePlaybackState();
+
+            // Metadata can be cached before listeners are attached.
+            restoreSavedPlayback();
+        }
+
+        disconnectedCallback() {
+            // Persist before pausing, otherwise navigation would incorrectly
+            // overwrite a playing session with wasPlaying=false.
+            this.persistState?.();
+            this.persistState = null;
+
+            this.abortController?.abort();
+            this.abortController = null;
+
+            this.audio?.pause();
+            this.audio = null;
+
+            this.chorusCleanup?.();
+            this.chorusCleanup = null;
+            this.audioContext = null;
+
+            this.dataset.playing = "false";
+        }
+    }
+
+    if (!customElements.get("site-audio-player")) {
+        customElements.define("site-audio-player", SiteAudioPlayer);
+    }
+</script>
+
+
+<style>
+    /*
+     * The player borrows the reference's compact indigo hardware shell while
+     * deriving every color from the site's existing blue-violet palette.
+     * Local role aliases keep the decorative treatment isolated from behavior.
+     */
+    .music-player {
+        --music-player-max-width: 26rem;
+        --music-player-radius: 0.55rem;
+        --music-player-inner-radius: 0.3rem;
+
+        --music-player-frame: color-mix(
+            in srgb,
+            var(--site-toolbar-border) 84%,
+            var(--container-bg)
+        );
+        --music-player-frame-edge: color-mix(
+            in srgb,
+            var(--site-toolbar-border) 72%,
+            var(--control-border)
+        );
+        --music-player-frame-highlight: color-mix(
+            in srgb,
+            var(--link-main) 44%,
+            var(--control-highlight)
+        );
+        --music-player-face-top: color-mix(
+            in srgb,
+            var(--link-main) 34%,
+            var(--site-toolbar-border)
+        );
+        --music-player-face-bottom: color-mix(
+            in srgb,
+            var(--site-toolbar-border) 76%,
+            var(--surface-soft)
+        );
+
+        --music-player-title-background: var(--site-toolbar-background);
+        --music-player-title-text: var(--site-toolbar-text);
+        /*
+     * Keep the compact display legible in both site themes. This fixed
+     * foreground/background pair has a 13.06:1 contrast ratio.
+     */
+        --music-player-well: #20294f;
+        --music-player-well-text: #f4f6ff;
+        --music-player-well-shadow: color-mix(
+            in srgb,
+            var(--control-border) 72%,
+            transparent
+        );
+
+        --music-player-control-top: color-mix(
+            in srgb,
+            var(--link-main) 54%,
+            var(--control-highlight)
+        );
+        --music-player-control-bottom: color-mix(
+            in srgb,
+            var(--site-toolbar-border) 78%,
+            var(--control-face)
+        );
+        --music-player-control-border: color-mix(
+            in srgb,
+            var(--site-toolbar-border) 70%,
+            var(--control-border)
+        );
+        --music-player-control-text: var(--site-toolbar-text);
+        --music-player-accent: var(--link-main);
+        --music-player-accent-hover: var(--link-hover);
+        --music-player-focus: var(--link-hover);
+
+        --music-player-disabled-opacity: 0.45;
+        --music-player-control-size: 1.875rem;
+        --music-player-play-size: 2rem;
+        --music-player-icon-size: 0.875rem;
+        --music-player-range-height: 1.25rem;
+        --music-player-range-track-height: 0.4rem;
+        --music-player-range-thumb-width: 1rem;
+        --music-player-range-thumb-height: 1rem;
+
+        box-sizing: border-box;
+        width: 100%;
+        max-width: var(--music-player-max-width);
+        margin-inline: auto;
+        overflow: hidden;
+        border: 2px solid var(--music-player-frame-edge);
+        border-radius: var(--music-player-radius);
+        background: var(--music-player-frame);
+        box-shadow:
+            inset 1px 1px 0 var(--music-player-frame-highlight),
+            inset -1px -1px 0 var(--music-player-well-shadow),
+            var(--shadow);
+    }
+
+    .music-player__player {
+        display: grid;
+        margin: 2px;
+        overflow: hidden;
+        border: var(--border-width) solid var(--music-player-frame-edge);
+        border-radius: var(--music-player-inner-radius);
+        background: linear-gradient(
+            to bottom,
+            var(--music-player-face-top),
+            var(--music-player-face-bottom)
+        );
+        box-shadow:
+            inset 1px 1px 0 var(--music-player-frame-highlight),
+            inset -1px -1px 0 var(--music-player-well-shadow);
+    }
+
+    .music-player__header {
+        min-width: 0;
+        padding: var(--space-xs);
+        border-bottom: var(--border-width) solid var(--music-player-frame-edge);
+    }
+
+    /*
+     * The embossed title strip echoes the reference player. The existing live
+     * status occupies the space used by mode controls in the original skin.
+     */
+    .music-player__title-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-sm);
+        min-width: 0;
+        min-height: 1.75rem;
+        margin-bottom: var(--space-xs);
+        padding: 0.2rem var(--space-sm);
+        border: var(--border-width) solid var(--music-player-frame-edge);
+        border-radius: var(--music-player-inner-radius);
+        background: var(--music-player-title-background);
+        box-shadow:
+            inset 1px 1px 0
+                color-mix(in srgb, var(--site-toolbar-text) 24%, transparent),
+            inset -1px -1px 0 var(--music-player-well-shadow);
+        color: var(--music-player-title-text);
+    }
+
+    .music-player__window-title {
+        margin: var(--space-none);
+        overflow: hidden;
+        font-size: var(--font-xs);
+        font-weight: var(--fw-bold);
+        line-height: 1.2;
+        text-shadow: 1px 1px 0 var(--music-player-well-shadow);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .music-player__status {
+        flex: none;
+        padding: 0.1rem var(--space-xs);
+        border: var(--border-width) solid
+            color-mix(in srgb, var(--music-player-title-text) 24%, transparent);
+        border-radius: 0.2rem;
+        background: color-mix(
+            in srgb,
+            var(--music-player-frame) 42%,
+            transparent
+        );
+        color: var(--music-player-title-text);
+        font-size: var(--font-2xs);
+        font-weight: var(--fw-semibold);
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .music-player__display {
+        min-width: 0;
+        padding: 0.35rem var(--space-sm);
+        overflow: hidden;
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 0.15rem;
+        box-shadow:
+            inset 1px 1px 1px var(--music-player-well-shadow),
+            inset -1px -1px 0
+                color-mix(
+                    in srgb,
+                    var(--music-player-frame-highlight) 44%,
+                    transparent
+                );
+    }
+
+    .music-player__ticker {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        color: var(--music-player-well-text);
+        font-size: var(--font-xs);
+        line-height: 1.2;
+        text-shadow: 1px 1px 0 var(--music-player-well-shadow);
+        white-space: nowrap;
+    }
+
+    .music-player__ticker-track {
+        display: flex;
+        width: max-content;
+        gap: var(--space-xl);
+    }
+
+    .music-player__track-info {
+        display: block;
+        flex: none;
+    }
+
+    .music-player__track-title {
+        color: inherit;
+        font-weight: var(--fw-semibold);
+    }
+
+    .music-player__track-info--copy {
+        display: none;
+    }
+
+    .music-player__player[data-playing="true"] .music-player__ticker-track {
+        animation: music-player-ticker 9s linear infinite;
+        will-change: transform;
+    }
+
+    .music-player__player[data-playing="true"] .music-player__track-info--copy {
+        display: block;
+    }
+
+    .music-player__seeking-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--space-sm);
+        align-items: center;
+        min-width: 0;
+        padding: var(--space-xs) var(--space-sm) var(--space-sm);
+        border-top: var(--border-width) solid var(--music-player-frame-edge);
+    }
+
+    /*
+     * Both ranges use --range-position for the filled portion in WebKit.
+     * Firefox supplies its own progress pseudo-element below.
+     */
+    .music-player__seeking,
+    .music-player__volume-input {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        min-width: 0;
+        height: var(--music-player-range-height);
+        margin: var(--space-none);
+        background: transparent;
+        accent-color: var(--music-player-accent);
+        cursor: pointer;
+    }
+
+    .music-player__seeking::-webkit-slider-runnable-track,
+    .music-player__volume-input::-webkit-slider-runnable-track {
+        height: var(--music-player-range-track-height);
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 0.15rem;
+        background-color: var(--music-player-well);
+        background: linear-gradient(
+            to right,
+            var(--music-player-accent) 0 var(--range-position, 0%),
+            var(--music-player-well) var(--range-position, 0%) 100%
+        );
+        box-shadow: inset 1px 1px 1px var(--music-player-well-shadow);
+    }
+
+    .music-player__seeking::-webkit-slider-thumb,
+    .music-player__volume-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: var(--music-player-range-thumb-width);
+        height: var(--music-player-range-thumb-height);
+        margin-top: calc(
+            (
+                    var(--music-player-range-track-height) -
+                        var(--music-player-range-thumb-height)
+                ) /
+                2 - var(--border-width)
+        );
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 0.15rem;
+        background: linear-gradient(
+            to right,
+            var(--music-player-control-bottom),
+            var(--music-player-control-top),
+            var(--music-player-control-bottom)
+        );
+        box-shadow:
+            inset 1px 1px 0 var(--music-player-frame-highlight),
+            inset -1px -1px 0 var(--music-player-well-shadow);
+    }
+
+    .music-player__seeking::-moz-range-track,
+    .music-player__volume-input::-moz-range-track {
+        height: var(--music-player-range-track-height);
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 0.15rem;
+        background: var(--music-player-well);
+        box-shadow: inset 1px 1px 1px var(--music-player-well-shadow);
+    }
+
+    .music-player__seeking::-moz-range-progress,
+    .music-player__volume-input::-moz-range-progress {
+        height: var(--music-player-range-track-height);
+        border-radius: 0.15rem;
+        background: var(--music-player-accent);
+    }
+
+    .music-player__seeking::-moz-range-thumb,
+    .music-player__volume-input::-moz-range-thumb {
+        width: var(--music-player-range-thumb-width);
+        height: var(--music-player-range-thumb-height);
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 0.15rem;
+        background: linear-gradient(
+            to right,
+            var(--music-player-control-bottom),
+            var(--music-player-control-top),
+            var(--music-player-control-bottom)
+        );
+        box-shadow:
+            inset 1px 1px 0 var(--music-player-frame-highlight),
+            inset -1px -1px 0 var(--music-player-well-shadow);
+    }
+
+    .music-player__seeking:disabled,
+    .music-player__volume-input:disabled {
+        cursor: not-allowed;
+        opacity: var(--music-player-disabled-opacity);
+    }
+
+    .music-player__time {
+        padding: 0.15rem var(--space-xs);
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 0.15rem;
+        background: var(--music-player-well);
+        box-shadow: inset 1px 1px 1px var(--music-player-well-shadow);
+        color: var(--music-player-well-text);
+        font-size: var(--font-2xs);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+        text-shadow: 1px 1px 0 var(--music-player-well-shadow);
+        white-space: nowrap;
+    }
+
+    .music-player__controls {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: var(--space-sm);
+        min-width: 0;
+        padding: var(--space-sm);
+    }
+
+    .music-player__transport,
+    .music-player__volume {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .music-player__transport {
+        grid-column: 1;
+        gap: var(--space-xs);
+    }
+
+    .music-player__volume {
+        grid-column: 2;
+        justify-self: stretch;
+        width: auto;
+        min-width: 0;
+        gap: var(--space-xs);
+    }
+
+    .music-player__volume-input {
+        flex: 1 1 auto;
+        width: 100%;
+        min-width: 0;
+    }
+
+    /*
+     * Circular, beveled controls are the reference skin's strongest motif.
+     * Their hover and keyboard states still use the site's pink link accent.
+     */
+    .music-player__transport-button,
+    .music-player__mute-button {
+        display: inline-grid;
+        flex: none;
+        place-items: center;
+        padding: var(--space-none);
+        border: var(--border-width) solid var(--music-player-control-border);
+        border-radius: 50%;
+        background:
+            radial-gradient(
+                circle at 35% 28%,
+                var(--music-player-frame-highlight),
+                transparent 32%
+            ),
+            linear-gradient(
+                to bottom,
+                var(--music-player-control-top),
+                var(--music-player-control-bottom)
+            );
+        box-shadow:
+            inset 1px 1px 0 var(--music-player-frame-highlight),
+            inset -1px -1px 0 var(--music-player-well-shadow),
+            0 1px 0 var(--music-player-well-shadow);
+        color: var(--music-player-control-text);
+        cursor: pointer;
+        text-shadow: 1px 1px 0 var(--music-player-well-shadow);
+    }
+
+    .music-player__transport-button {
+        width: var(--music-player-control-size);
+        height: var(--music-player-control-size);
+    }
+
+    .music-player__transport-button--play {
+        width: var(--music-player-play-size);
+        height: var(--music-player-play-size);
+        border-color: var(--music-player-frame-edge);
+        color: var(--music-player-title-text);
+    }
+
+    .music-player__transport-icon {
+        width: var(--music-player-icon-size);
+        height: var(--music-player-icon-size);
+    }
+
+    .music-player__transport-button--play .music-player__transport-icon {
+        width: var(--music-player-icon-size);
+        height: var(--music-player-icon-size);
+    }
+
+    .music-player__transport-icon--pause {
+        display: none;
+    }
+
+    /* Playback state is exposed by JavaScript; CSS owns the icon swap. */
+    .music-player__player[data-playing="true"]
+        .music-player__transport-icon--play {
+        display: none;
+    }
+
+    .music-player__player[data-playing="true"]
+        .music-player__transport-icon--pause {
+        display: block;
+    }
+
+    .music-player__mute-button {
+        width: var(--music-player-control-size);
+        height: var(--music-player-control-size);
+    }
+
+    .music-player__transport-button:not(:disabled):hover,
+    .music-player__mute-button:not(:disabled):hover {
+        border-color: var(--music-player-accent-hover);
+        color: var(--music-player-accent-hover);
+        background:
+            radial-gradient(
+                circle at 35% 28%,
+                color-mix(
+                    in srgb,
+                    var(--music-player-accent-hover) 54%,
+                    var(--music-player-frame-highlight)
+                ),
+                transparent 32%
+            ),
+            linear-gradient(
+                to bottom,
+                color-mix(
+                    in srgb,
+                    var(--music-player-accent-hover) 38%,
+                    var(--music-player-control-top)
+                ),
+                var(--music-player-control-bottom)
+            );
+    }
+
+    .music-player__transport-button:not(:disabled):active,
+    .music-player__mute-button:not(:disabled):active {
+        box-shadow:
+            inset 1px 1px 1px var(--music-player-well-shadow),
+            inset -1px -1px 0 var(--music-player-frame-highlight);
+        transform: translateY(var(--border-width));
+    }
+
+    .music-player__transport-button:focus-visible,
+    .music-player__mute-button:focus-visible,
+    .music-player__seeking:focus-visible,
+    .music-player__volume-input:focus-visible {
+        outline: 2px solid var(--music-player-focus);
+        outline-offset: 2px;
+    }
+
+    .music-player__transport-button:disabled,
+    .music-player__mute-button:disabled {
+        cursor: not-allowed;
+        opacity: var(--music-player-disabled-opacity);
+    }
+
+    .music-player__volume-icon {
+        width: var(--music-player-icon-size);
+        height: var(--music-player-icon-size);
+    }
+
+    /* data-muted swaps the wave and mute-mark paths in the same SVG. */
+    .music-player__volume-muted,
+    .music-player__mute-button[data-muted="true"] .music-player__volume-waves {
+        display: none;
+    }
+
+    .music-player__mute-button[data-muted="true"] .music-player__volume-muted {
+        display: block;
+    }
+
+    .music-player__audio {
+        display: none;
+    }
+
+    /* Move by one copy plus half of the shared gap for a seamless loop. */
+    @keyframes music-player-ticker {
+        to {
+            transform: translateX(calc(-50% - (var(--space-xl) / 2)));
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .music-player__player[data-playing="true"] .music-player__ticker-track {
+            animation: none;
+        }
+
+        .music-player__player[data-playing="true"]
+            .music-player__track-info--copy {
+            display: none;
+        }
+    }
+</style>

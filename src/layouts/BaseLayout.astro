@@ -1,0 +1,285 @@
+---
+import "../styles/global.css";
+
+import SiteHeader from "@components/layout/SiteHeader.astro";
+import SiteFooter from "@components/layout/SiteFooter.astro";
+
+interface Props {
+    title: string;
+    description: string;
+}
+
+const {
+    title,
+    description,
+} = Astro.props;
+
+/*
+ * Only emit a canonical URL when Astro has a production origin configured.
+ * This avoids both a runtime error and an accidental localhost canonical.
+ */
+const canonicalURL = Astro.site
+    ? new URL(Astro.url.pathname, Astro.site)
+    : undefined;
+
+/*
+ * The slot controls both the optional sidebar landmark and the two-column
+ * layout modifier.
+ */
+const hasSidebar = Astro.slots.has("sidebar");
+---
+
+<!doctype html>
+<html lang="en" data-theme="light">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content={description} />
+        <meta name="color-scheme" content="dark light" />
+        <meta name="theme-color" content="#8792a6" />
+
+        {canonicalURL && <link rel="canonical" href={canonicalURL} />}
+
+        <title>{title}</title>
+
+        <script is:inline>
+            (() => {
+                const STORAGE_KEY = "site-theme";
+                const root = document.documentElement;
+                const themeColor = document.querySelector(
+                    'meta[name="theme-color"]',
+                );
+
+                /*
+                 * Light is the site default. A saved visitor choice is the only
+                 * condition that overrides it before the first paint.
+                 */
+                let theme = "light";
+
+                try {
+                    const savedTheme = localStorage.getItem(STORAGE_KEY);
+
+                    if (savedTheme === "light" || savedTheme === "dark") {
+                        theme = savedTheme;
+                    }
+                } catch {
+                    // Keep the default theme when storage is unavailable.
+                }
+
+                /*
+                 * Read the active theme token instead of duplicating both theme
+                 * colors in this layout. Observing `data-theme` also keeps the
+                 * browser chrome synchronized with later control changes.
+                 */
+                const syncThemeColor = () => {
+                    const currentThemeColor = getComputedStyle(root)
+                        .getPropertyValue("--theme-color")
+                        .trim();
+
+                    if (currentThemeColor) {
+                        themeColor?.setAttribute(
+                            "content",
+                            currentThemeColor,
+                        );
+                    }
+                };
+
+                root.dataset.theme = theme;
+                syncThemeColor();
+
+                new MutationObserver(syncThemeColor).observe(root, {
+                    attributes: true,
+                    attributeFilter: ["data-theme"],
+                });
+            })();
+        </script>
+    </head>
+
+    <body>
+        <a class="skip-link" href="#main-content">Skip to content</a>
+
+        <div class="desktop-stage">
+            <div class="site-shell">
+                <div class="site-viewport">
+                    <SiteHeader />
+
+                    <div
+                        class:list={[
+                            "page-grid",
+                            { "page-grid--with-sidebar": hasSidebar },
+                        ]}
+                    >
+                        {
+                            /*
+                             * The sidebar appears first in both the DOM and the
+                             * visual grid. The skip link still moves directly
+                             * to the main content.
+                             */
+                            hasSidebar && (
+                                <aside
+                                    class="page-sidebar"
+                                    aria-label="Site sidebar"
+                                >
+                                    <slot name="sidebar" />
+                                </aside>
+                            )
+                        }
+
+                        <main class="page-main" id="main-content">
+                            <slot />
+                        </main>
+                    </div>
+
+                    <SiteFooter />
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+{/*
+ * `page-grid` provides the default one-column layout.
+ *
+ * When a sidebar slot exists, `class:list` also applies
+ * `page-grid--with-sidebar`, which creates the desktop sidebar column and
+ * collapses to one column at the tablet breakpoint.
+ *
+ * `--site-gutter` represents the shell's horizontal inner spacing. Child
+ * components inherit it so header elements and page content share one edge.
+ */}
+<style>
+    .skip-link {
+        position: fixed;
+        z-index: var(--layer-skip-link);
+        top: var(--space-sm);
+        left: var(--space-sm);
+
+        padding: var(--space-xs) var(--space-sm);
+
+        transform: translateY(var(--skip-link-hidden-offset));
+
+        border: var(--border-width) solid var(--control-border);
+
+        background: var(--control-face);
+        color: var(--control-text);
+
+        font-size: var(--font-xs);
+    }
+
+    .skip-link:focus {
+        transform: translateY(var(--space-none));
+    }
+
+    .desktop-stage {
+        display: grid;
+        width: 100%;
+        min-width: 0;
+        min-height: var(--desktop-stage-min-height);
+        place-items: start center;
+    }
+
+    /*
+     * The shell is fluid until it reaches the original desktop width. Keeping
+     * min-width at zero allows it to shrink inside narrow viewports.
+     */
+    .site-shell {
+        --site-gutter: var(--shell-padding);
+
+        width: 100%;
+        min-width: 0;
+        max-width: var(--shell-max-width);
+        border: var(--border-width) solid var(--border-strong);
+        background: var(--page-shell);
+        /* box-shadow: var(--shadow); */
+    }
+
+    /*
+     * The inner canvas owns the shared gutter used by the header and page grid.
+     */
+    .site-viewport {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+
+        padding: var(--space-none) var(--site-gutter) var(--space-md);
+
+        background: var(--page-shell);
+    }
+
+    .page-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--layout-gap);
+        align-items: start;
+
+        padding-bottom: var(--space-xl);
+    }
+
+    .page-main,
+    .page-sidebar {
+        display: grid;
+        min-width: 0;
+        gap: var(--space-sm);
+    }
+
+    /*
+     * The responsive desktop rail leaves the remaining width to the main content.
+     */
+    .page-grid--with-sidebar {
+        grid-template-columns:
+            var(--sidebar-width)
+            minmax(0, 1fr);
+    }
+
+    .page-grid--with-sidebar .page-sidebar {
+        position: sticky;
+        top: var(--space-sm);
+
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .page-grid--with-sidebar .page-main {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    /*
+     * Stack the sidebar and main content before either column becomes cramped.
+     * The sidebar remains first because it contains the primary site navigation.
+     */
+    @media (max-width: 52rem) {
+        .desktop-stage {
+            min-height: 0;
+            place-items: start stretch;
+        }
+
+        .page-grid--with-sidebar {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .page-grid--with-sidebar .page-sidebar,
+        .page-grid--with-sidebar .page-main {
+            grid-column: 1;
+            grid-row: auto;
+        }
+
+        .page-grid--with-sidebar .page-sidebar {
+            position: static;
+        }
+    }
+
+    /*
+     * On small phones, remove the decorative shadow and reduce the final
+     * vertical gap without changing the site's bordered, nostalgic shell.
+     */
+    @media (max-width: 38rem) {
+        .site-shell {
+            box-shadow: none;
+        }
+
+        .page-grid {
+            padding-bottom: var(--space-lg);
+        }
+    }
+</style>

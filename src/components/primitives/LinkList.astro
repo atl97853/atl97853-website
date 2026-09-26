@@ -1,0 +1,105 @@
+---
+/**
+ * Primitive navigation list component.
+ *
+ * Summary:
+ * Reusable low-level component for rendering a list of navigation links using
+ * the existing `.c-nav-list` and `.c-nav-list__link` classes.
+ *
+ * How it works:
+ * - Receives an array of link objects through the `items` prop.
+ * - Renders each item as a list item with an anchor.
+ * - Supports optional icons, accessible labels, and extra class pass-throughs.
+ * - Does not render a card, heading, section, or wrapper by itself.
+ *
+ * Usage:
+ * Use this inside higher-level components such as navbars, card sections,
+ * footer link groups, archive links, or year navigation blocks. This component
+ * does not introduce new CSS classes; component-specific classes should be
+ * passed through `listClass`, `itemClass`, and `linkClass`.
+ */
+
+interface NavLink {
+    href: string;
+    label: string | number;
+    icon?: string;
+    ariaLabel?: string;
+}
+
+interface Props {
+    items?: NavLink[];
+    listClass?: string;
+    itemClass?: string;
+    linkClass?: string;
+}
+
+const {
+    items = [],
+    listClass,
+    itemClass,
+    linkClass,
+} = Astro.props;
+
+const links = items
+    .map((item) => ({
+        ...item,
+        href: item.href.trim(),
+        label: String(item.label).trim(),
+        icon: item.icon?.trim(),
+        ariaLabel: item.ariaLabel?.trim() || undefined,
+    }))
+    .filter((item) => item.href && item.label);
+---
+
+{
+    links.length > 0 && (
+        <ul class:list={["c-nav-list", listClass]}>
+            {
+                links.map((link) => (
+                    <li class={itemClass}>
+                        <a
+                            href={link.href}
+                            class:list={["c-nav-list__link", linkClass]}
+                            aria-label={link.ariaLabel}
+                        >
+                            {
+                                link.icon ? (
+                                    <>
+                                        <span aria-hidden="true">{link.icon}</span>{" "}
+                                        <span>{link.label}</span>
+                                    </>
+                                ) : (
+                                    link.label
+                                )
+                            }
+                        </a>
+                    </li>
+                ))
+            }
+        </ul>
+    )
+}
+
+<style>
+    .c-nav-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--component-nav-list-gap);
+        padding: var(--component-nav-list-padding);
+    }
+
+    .c-nav-list__link {
+        display: block;
+        padding: var(--component-nav-link-padding);
+        color: var(--clr-link-main);
+        font-size: var(--fs-sm);
+        line-height: var(--lh-link);
+        text-decoration: var(--component-link-decoration);
+        overflow-wrap: break-word;
+    }
+
+    .c-nav-list__link:hover,
+    .c-nav-list__link:focus-visible {
+        color: var(--clr-link-hover);
+    }
+</style>

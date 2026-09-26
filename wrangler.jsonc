@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "atl97853-website-cloudflare",
+  "compatibility_date": "2026-01-21",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { 
+      "pattern": "atl97853.com",
+      "custom_domain": true
+    },
+    { 
+      "pattern": "www.atl97853.com",
+      "custom_domain": true
+    }
+  ]
+}

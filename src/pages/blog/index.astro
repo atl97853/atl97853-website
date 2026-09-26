@@ -1,0 +1,15 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+
+import SiteNavigation from "@components/layout/SiteNavigation.astro";
+import RecentPosts from "@components/blogs/RecentPosts.astro";
+---
+
+<BaseLayout 
+    title="Blog"
+    description="Blogs"
+>
+    <RecentPosts />
+
+    <SiteNavigation slot="sidebar">
+</BaseLayout>

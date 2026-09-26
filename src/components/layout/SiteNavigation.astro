@@ -1,0 +1,153 @@
+---
+import Panel from "@components/primitives/Panel.astro";
+
+const navigationItems = [
+    {
+        href: "/",
+        label: "Homepage",
+        icon: "📁",
+    },
+    {
+        href: "/about",
+        label: "About",
+        icon: "👤",
+    },
+    {
+        href: "/blog",
+        label: "Blog",
+        icon: "📁",
+    },
+    {
+        href: "/coursework",
+        label: "Coursework",
+        icon: "📄",
+    },
+    {
+        href: "/library",
+        label: "Library",
+        icon: "📖",
+    },
+] as const;
+
+function normalizePath(path: string): string {
+    const normalizedPath = path.replace(/\/+$/, "");
+
+    return normalizedPath || "/";
+}
+
+const currentPath = normalizePath(Astro.url.pathname);
+
+function isCurrent(href: string): boolean {
+    const itemPath = normalizePath(href);
+
+    if (itemPath === "/") return currentPath === "/";
+
+    return (
+        currentPath === itemPath || currentPath.startsWith(`${itemPath}/`)
+    );
+}
+---
+
+<Panel 
+    as="nav"
+    title="Navigation"
+    class="site-navigation"
+>    
+    <ul class="site-navigation__ul">
+        {
+            navigationItems.map((item) => (
+                <li class="site-navigation__li">
+                    <a
+                        class="site-navigation__link"
+                        href={item.href}
+                        aria-current={isCurrent(item.href) ? "page" : undefined}
+                    >
+                        <span
+                            class="site-navigation__icon"
+                            aria-hidden="true"
+                        >
+                            {item.icon}
+                        </span>
+
+                        <span class="site-navigation__label">{item.label}</span>
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</Panel>
+
+{/*
+ * `.site-navigation > :global(.panel__heading)` keeps the override scoped to SiteNavigation.
+ * .site-navigation remains local to this component, while .panel__heading
+ * is global because it is rendered inside Panel. The direct-child selector
+ * limits the rule to this navigation root, so other Panel headings elsewhere
+ * will not match.
+ */}
+<style>
+    /* Scoped Panel override */
+    .site-navigation > :global(.panel__heading) {
+        padding: 0.82rem var(--space-md);
+        border-bottom: 1px solid var(--border);
+    }
+    /* Scoped Panel override */
+    .site-navigation__ul {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .site-navigation__li + .site-navigation__li {
+        border-top: 1px dotted var(--border);
+    }
+
+    .site-navigation__link {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.1rem minmax(0, 1fr);
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-sm);
+        color: var(--link-main);
+        font-size: var(--font-md);
+        font-weight: var(--fw-semibold);
+        line-height: 1.2;
+        text-decoration: none;
+    }
+
+    .site-navigation__link:hover {
+        background: var(--surface-hover);
+        color: var(--link-hover);
+    }
+
+    .site-navigation__link:focus-visible {
+        outline-offset: -2px;
+    }
+
+    .site-navigation__link[aria-current="page"] {
+        background: var(--surface-soft);
+    }
+
+    .site-navigation__link[aria-current="page"]::before {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: 3px;
+        background: var(--link-main);
+        content: "";
+    }
+
+    .site-navigation__icon {
+        display: inline-grid;
+        width: 1.1rem;
+        height: 1.1rem;
+        place-items: center;
+        font-family:
+            "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+            sans-serif;
+        font-size: var(--font-sm);
+        font-weight: 400;
+        line-height: 1;
+    }
+</style>

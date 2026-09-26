@@ -1,0 +1,118 @@
+---
+interface Props {
+    src: string;
+    alt: string;
+    spoiler?: boolean;
+}
+
+const { src, alt, spoiler = false } = Astro.props;
+---
+
+{
+    spoiler ? (
+        <figure class="c-spoiler-image" data-spoiler-image data-revealed="false">
+            <div class="c-spoiler-image__media">
+                <img src={src} alt={alt} loading="lazy" decoding="async" />
+            </div>
+
+            <button
+                class="c-spoiler-image__button"
+                type="button"
+                data-spoiler-toggle
+                aria-expanded="false"
+            >
+                reveal image
+            </button>
+        </figure>
+    ) : (
+        <figure class="c-spoiler-image">
+            <img src={src} alt={alt} loading="lazy" decoding="async" />
+        </figure>
+    )
+}
+
+<script>
+    document.querySelectorAll("[data-spoiler-image]").forEach((spoilerImage) => {
+        if (spoilerImage instanceof HTMLElement && spoilerImage.dataset.initialized === "true") {
+            return;
+        }
+
+        const button = spoilerImage.querySelector("[data-spoiler-toggle]");
+
+        if (!(spoilerImage instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) {
+            return;
+        }
+
+        spoilerImage.dataset.initialized = "true";
+
+        button.addEventListener("click", () => {
+            const isRevealed = spoilerImage.dataset.revealed === "true";
+            const nextState = !isRevealed;
+
+            spoilerImage.dataset.revealed = String(nextState);
+            button.setAttribute("aria-expanded", String(nextState));
+            button.textContent = nextState ? "hide image" : "reveal image";
+        });
+    });
+</script>
+
+<style>
+    .c-spoiler-image {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        display: grid;
+        place-items: center;
+    }
+
+    .c-spoiler-image img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        object-position: center;
+    }
+
+    .c-spoiler-image__media {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+    }
+
+    .c-spoiler-image[data-revealed="false"] .c-spoiler-image__media img {
+        filter: blur(14px);
+        user-select: none;
+    }
+
+    .c-spoiler-image__button {
+        margin-top: var(--space-xs, 4px);
+        padding: 0;
+        color: var(--clr-accent, currentColor);
+        background: transparent;
+        border: 0;
+        font: inherit;
+        font-size: var(--fs-xs, 0.875rem);
+        line-height: 1.4;
+        text-decoration: underline;
+        text-underline-offset: 0.14em;
+        cursor: pointer;
+    }
+
+    .c-spoiler-image__button:hover,
+    .c-spoiler-image__button:focus-visible {
+        color: var(--clr-link-hover, var(--clr-accent, currentColor));
+    }
+
+    .c-spoiler-image__button:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .c-spoiler-image img {
+            transition: none;
+        }
+    }
+</style>

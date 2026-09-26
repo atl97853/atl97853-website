@@ -1,0 +1,63 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+    <p class="site-footer__meta">
+        <a href="/colophon">
+            Since 2025 - {currentYear}
+        </a>
+        |
+        <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank">
+            &copy;
+            CC BY-NC-ND 4.0
+        </a>
+    </p>
+    
+    <a href="#main-content">Back to top &uarr;</a>
+</footer>
+
+<style>
+    .site-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+
+        background: var(--card-bg);
+        color: var(--text-muted);
+
+        font-size: var(--font-xs);
+        line-height: 1.2;
+
+        /* box-shadow: var(--shadow); */
+    }
+
+    /* It turns the footer’s metadata paragraph into a flexible horizontal row */
+    .site-footer__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-xs);
+    }
+
+    .site-footer a {
+        color: var(--link-main);
+        text-decoration: none;
+    }
+
+    .site-footer a:hover,
+    .site-footer a:focus-visible {
+        color: var(--link-hover);
+    }
+
+    @media (max-width: 38rem) {
+        .site-footer {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>

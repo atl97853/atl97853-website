@@ -1,0 +1,143 @@
+---
+/**
+ * Displays the seven most recently published blog posts.
+ *
+ * Collection entries are sorted by publication date before being reduced to
+ * the data required by this presentation component.
+ */
+
+import { getCollection } from "astro:content";
+
+import Panel from "@components/primitives/Panel.astro";
+import { formatDate } from "../../utils";
+
+const POST_LIMIT = 7;
+
+const posts = (await getCollection("blog"))
+    .sort(
+        (firstPost, secondPost) =>
+            secondPost.data.pubDate.getTime() -
+            firstPost.data.pubDate.getTime(),
+    )
+    .slice(0, POST_LIMIT)
+    .map((post) => ({
+        href: `/blog/${post.id}/`,
+        title: post.data.title,
+        dateLabel: formatDate(post.data.pubDate),
+        dateTime: post.data.pubDate.toISOString(),
+    }));
+
+const hasPosts = posts.length > 0;
+---
+
+<Panel
+    as="section"
+    class="recent-posts"
+    title="Recent posts"
+>
+    {
+        hasPosts ? (
+            <ul class="recent-posts__list">
+                {posts.map((post) => (
+                    <li class="recent-posts__item">
+                        <time
+                            class="recent-posts__date"
+                            datetime={post.dateTime}
+                        >
+                            ({post.dateLabel})
+                        </time>
+
+                        {" "}
+
+                        <a
+                            class="recent-posts__title-link"
+                            href={post.href}
+                        >
+                            {post.title}
+                        </a>
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <div class="recent-posts__empty">
+                No posts available at the moment.
+            </div>
+        )
+    }
+</Panel>
+
+<style>
+    /* Scoped Panel override. 
+     * Panel renders its heading internally. The scoped parent selector keeps
+     * this global override limited to the RecentPosts component.
+     */
+    .recent-posts > :global(.panel__heading) {
+        padding: 0.82rem var(--space-md);
+        border-bottom: 1px solid var(--border);
+    }
+    /* Scoped Panel override */
+    /*
+     * The list uses ordinary browser bullets to preserve the simple
+     * personal-site archive appearance.
+     */
+    .recent-posts__list {
+        margin: 0;
+        padding: 0.82rem var(--space-md);
+        /* This preserves the same outer panel padding while reserving extra space for the browser-generated bullet marker. */
+        padding-inline-start: calc(var(--space-md) + 1.5rem);
+        list-style: disc;
+    }
+
+    .recent-posts__item {
+        color: var(--text-main);
+        font-size: var(--font-md);
+        line-height: 1.55;
+    }
+
+    .recent-posts__item + .recent-posts__item {
+        margin-top: 0.12rem;
+    }
+
+    .recent-posts__date {
+        color: var(--text-muted);
+        font-size: var(--font-sm);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .recent-posts__title-link {
+        color: var(--link-main);
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.14em;
+        overflow-wrap: anywhere;
+    }
+
+    .recent-posts__title-link:hover,
+    .recent-posts__title-link:focus-visible {
+        color: var(--link-hover);
+        text-decoration-thickness: 2px;
+    }
+
+    .recent-posts__title-link:focus-visible {
+        outline: 2px solid var(--link-main);
+        outline-offset: 2px;
+    }
+
+    .recent-posts__empty {
+        padding: 0.82rem var(--space-md);
+        color: var(--text-muted);
+        font-size: var(--font-sm);
+        line-height: var(--line-height-reading);
+    }
+
+    @media (max-width: 38rem) {
+        .recent-posts__list {
+            padding-inline: var(--space-sm);
+            padding-inline-start: calc(var(--space-sm) + 1.25rem);
+        }
+
+        .recent-posts__empty {
+            padding-inline: var(--space-sm);
+        }
+    }
+</style>

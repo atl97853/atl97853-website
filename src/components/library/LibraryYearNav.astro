@@ -1,0 +1,27 @@
+---
+import Card from "./primitives/Card.astro";
+import LinkList from "./primitives/LinkList.astro";
+
+interface Props {
+    years: number[];
+}
+
+const { years } = Astro.props;
+
+const yearLinks = [...new Set(years)]
+    .filter((year) => Number.isInteger(year) && year > 0)
+    .sort((a, b) => b - a)
+    .map((year) => ({
+        href: `#library-${year}`,
+        label: year,
+        ariaLabel: `Jump to books read in ${year}`,
+    }));
+---
+
+<Card
+    as="nav"
+    title="Years"
+    titleId="library-years-title"
+>
+    <LinkList items={yearLinks} />
+</Card>

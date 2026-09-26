@@ -1,0 +1,127 @@
+---
+import Card from "./primitives/Card.astro";
+
+interface Skill {
+    name: string;
+    level: number;
+}
+
+const rawSkills: Skill[] = [
+    { name: "B.S. in Computer Systems Engineering", level: 0 },
+    { name: "English proficiency (B2)", level: 40 },
+];
+
+function clampLevel(level: number): number {
+    return Number.isFinite(level) ? Math.min(100, Math.max(0, level)) : 0;
+}
+
+function formatLevel(level: number): string {
+    return Number.isInteger(level) ? `${level}%` : `${level.toFixed(2)}%`;
+}
+
+function getProgressId(name: string, index: number): string {
+    const slug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    return `progress-${slug || index}`;
+}
+
+const skills = rawSkills.map((skill) => ({
+    ...skill,
+    level: clampLevel(skill.level),
+}));
+---
+
+<Card
+    title="Progress"
+    titleId="progress-title"
+    class="c-progress-card"
+>
+    <div class="c-progress-list">
+        {
+            skills.map((skill, index) => {
+                const progressId = getProgressId(skill.name, index);
+                const nameId = `${progressId}-name`;
+                const valueId = `${progressId}-value`;
+                const formattedLevel = formatLevel(skill.level);
+
+                return (
+                    <div class="c-progress-item">
+                        <div class="c-progress-meta">
+                            <span id={nameId} class="c-progress-name">
+                                {skill.name}
+                            </span>
+
+                            <span id={valueId} class="c-progress-value">
+                                {formattedLevel}
+                            </span>
+                        </div>
+
+                        <div
+                            class="c-progress-track"
+                            role="progressbar"
+                            aria-labelledby={`${nameId} ${valueId}`}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow={skill.level}
+                            aria-valuetext={formattedLevel}
+                        >
+                            <div
+                                class="c-progress-fill"
+                                style={`width: ${skill.level}%`}
+                            />
+                        </div>
+                    </div>
+                );
+            })
+        }
+    </div>
+</Card>
+
+<style>
+    .c-progress-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+        padding-top: var(--space-xs);
+    }
+
+    .c-progress-item {
+        min-width: 0;
+    }
+
+    .c-progress-meta {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: baseline;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-xs);
+    }
+
+    .c-progress-name {
+        min-width: 0;
+        overflow-wrap: break-word;
+    }
+
+    .c-progress-value {
+        color: var(--clr-text-muted);
+        font-size: var(--fs-xs);
+        white-space: nowrap;
+    }
+
+    .c-progress-track {
+        display: block;
+        width: 100%;
+        height: 3px;
+        overflow: hidden;
+        background: var(--clr-border);
+    }
+
+    .c-progress-fill {
+        display: block;
+        height: 100%;
+        background: var(--clr-text-strong);
+    }
+</style>

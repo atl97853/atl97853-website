@@ -1,0 +1,185 @@
+---
+/**
+ * Displays the seven most recent valid log entries.
+ *
+ * Entries may provide either `date` or `time`. When both exist, `date` is the
+ * canonical value used for display, sorting, and the semantic `datetime`
+ * attribute; `time` acts as the fallback.
+ */
+
+import Panel from "@components/primitives/Panel.astro";
+import latestLogs from "@content/logs/recent_logs.json";
+
+interface LogEntry {
+    time?: string;
+    date?: string;
+    description?: string;
+    text?: string;
+}
+
+interface NormalizedLogEntry {
+    datetime: string;
+    displayTimestamp: string;
+    description: string;
+}
+
+const LOG_LIMIT = 7;
+
+const MONTH_NAMES = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+] as const;
+
+const logEntries = latestLogs satisfies LogEntry[];
+
+/**
+ * Converts an ISO calendar date into the compact label used by the component.
+ * Nonmatching values are returned unchanged instead of being reformatted
+ * incorrectly.
+ */
+function formatDate(date: string): string {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+    if (!match) return date;
+
+    const [, year, month, day] = match;
+    const monthName = MONTH_NAMES[Number(month) - 1];
+
+    if (!monthName) return date;
+
+    return `${day}, ${monthName}, ${year}`;
+}
+
+/**
+ * Validates one log and resolves its preferred temporal value. `date` takes
+ * precedence over `time` and retains the component's formatted date label.
+ * Invalid entries without a timestamp or description are omitted.
+ */
+function normalizeLog(log: LogEntry): NormalizedLogEntry | null {
+    const time = log.time?.trim() ?? "";
+    const date = log.date?.trim() ?? "";
+    const datetime = date || time;
+    const description = log.description?.trim() || log.text?.trim() || "";
+
+    if (!datetime || !description) return null;
+
+    return {
+        datetime,
+        displayTimestamp: date ? formatDate(date) : time,
+        description,
+    };
+}
+
+const logs = logEntries
+    .map(normalizeLog)
+    .filter((log): log is NormalizedLogEntry => log !== null)
+    .sort((firstLog, secondLog) =>
+        secondLog.datetime.localeCompare(firstLog.datetime),
+    )
+    .slice(0, LOG_LIMIT);
+---
+
+<Panel as="section" class="recent-logs" title="Recent logs">
+    {
+        logs.length > 0 ? (
+            <ol class="recent-logs__list">
+                {logs.map((log) => (
+                    <li class="recent-logs__item">
+                        <time
+                            class="recent-logs__timestamp"
+                            datetime={log.datetime}
+                        >
+                            {log.displayTimestamp}
+                        </time>
+
+                        <p class="recent-logs__description">
+                            {log.description}
+                        </p>
+                    </li>
+                ))}
+            </ol>
+        ) : (
+            <p class="recent-logs__empty">
+                No updates available at the moment.
+            </p>
+        )
+    }
+</Panel>
+
+<style>
+    /*
+     * Keep the shared Panel primitive generic while aligning this heading with
+     * the content padding used throughout the homepage.
+     */
+    .recent-logs > :global(.panel__heading) {
+        padding: var(--space-md);
+        border-bottom: var(--border-width) solid var(--border);
+    }
+
+    .recent-logs__list {
+        display: grid;
+        margin: 0;
+        padding-block: var(--space-xs);
+        padding-inline: 0;
+        list-style: none;
+    }
+
+    .recent-logs__item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        align-items: baseline;
+        column-gap: var(--space-xs);
+        padding: var(--space-xs) var(--space-md);
+    }
+
+    .recent-logs__item + .recent-logs__item {
+        border-top: var(--border-width) dotted var(--border);
+    }
+
+    .recent-logs__timestamp {
+        grid-column: 2;
+        grid-row: 1;
+        color: var(--link-main);
+        font-size: var(--font-sm);
+        font-weight: var(--fw-semibold);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.45;
+        text-align: end;
+        white-space: nowrap;
+    }
+
+    .recent-logs__description {
+        grid-column: 1;
+        grid-row: 1;
+        margin: 0;
+        color: var(--text-main);
+        font-size: var(--font-md);
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        text-wrap: pretty;
+    }
+
+    .recent-logs__empty {
+        margin: 0;
+        padding: var(--space-md);
+        color: var(--text-muted);
+        font-size: var(--font-sm);
+        line-height: var(--line-height-reading);
+    }
+
+    @media (max-width: 38rem) {
+        .recent-logs__item {
+            padding-inline: var(--space-sm);
+        }
+    }
+</style>

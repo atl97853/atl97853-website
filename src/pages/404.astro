@@ -1,0 +1,292 @@
+---
+/**
+ * Cowsay-inspired 404 page with a client-selected Tohru fortune.
+ *
+ * Astro prepares each fortune as an ASCII speech bubble and renders the first
+ * one as a no-JavaScript fallback. The page-local script chooses another
+ * fortune in the browser on every visit or reload and synchronizes the page's
+ * description metadata.
+ */
+
+import { Image } from "astro:assets";
+import tohru404 from "@images/assets/tohru_404.jpg";
+
+import BaseLayout from "@layouts/BaseLayout.astro";
+import SiteNavigation from "@components/layout/SiteNavigation.astro";
+
+const fortunes = [
+    "Tohru, the cat engineer, rerouted this page through a wormhole and forgot the return address.",
+    "This page was removed from the graph. Tohru insists it was not connected anyway.",
+    "Tohru tried to prove this route exists by contradiction. The contradiction won.",
+    "The page entered deep space, lost signal, and Tohru marked the mission as mostly successful.",
+    "Tohru refactored the universe and accidentally deleted this path.",
+    "This URL failed its type check. Tohru says the compiler is being dramatic.",
+    "The page was hidden inside a recursive spell, and Tohru forgot the base case.",
+    "Tohru opened a portal to the archive, but this page was not in the catalog.",
+    "This path evaluates to undefined. Tohru calls it an elegant abstraction.",
+    "Tohru misplaced this page somewhere between a dragon hoard and a database migration.",
+    "The page was transformed into pure math. Unfortunately, browsers cannot render that yet.",
+    "Tohru says this route belongs to the empty set.",
+    "This page was captured by a tiny bug in the routing matrix. Tohru is negotiating.",
+    "Tohru cast a lookup spell, but the result came back null.",
+    "The page exists in a parallel timeline where Tohru finished debugging earlier.",
+    "This link wandered into a dungeon and failed its pathfinding algorithm.",
+    "Tohru compressed the site map and this page became a rounding error.",
+    "The page was probably eaten by a dragon. Tohru denies involvement, suspiciously.",
+    "This route has no proof, no implementation, and no snacks. Tohru moved on.",
+] as const;
+
+const BUBBLE_COLUMNS = 42;
+
+interface RenderedFortune {
+    message: string;
+    bubble: string;
+}
+
+/** Wraps a fortune into lines that fit inside the fixed-width ASCII bubble. */
+function wrapFortune(message: string, lineLength: number): string[] {
+    const words = message.trim().split(/\s+/);
+    const lines: string[] = [];
+    let currentLine = "";
+
+    for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+
+        if (candidate.length <= lineLength) {
+            currentLine = candidate;
+            continue;
+        }
+
+        if (currentLine) lines.push(currentLine);
+        currentLine = word;
+    }
+
+    if (currentLine) lines.push(currentLine);
+
+    return lines;
+}
+
+/** Formats a wrapped fortune as a cowsay-style bubble and speech connector. */
+function createCowsayBubble(message: string): string {
+    const lines = wrapFortune(message, BUBBLE_COLUMNS);
+    const contentWidth = Math.max(...lines.map((line) => line.length));
+    const topBorder = ` ${"_".repeat(contentWidth + 2)}`;
+    const bottomBorder = ` ${"-".repeat(contentWidth + 2)}`;
+    const body = lines.map((line, index) => {
+        const isFirstLine = index === 0;
+        const isLastLine = index === lines.length - 1;
+        const leftEdge =
+            lines.length === 1
+                ? "<"
+                : isFirstLine
+                  ? "/"
+                  : isLastLine
+                    ? "\\"
+                    : "|";
+        const rightEdge =
+            lines.length === 1
+                ? ">"
+                : isFirstLine
+                  ? "\\"
+                  : isLastLine
+                    ? "/"
+                    : "|";
+
+        return `${leftEdge} ${line.padEnd(contentWidth)} ${rightEdge}`;
+    });
+
+    return [topBorder, ...body, bottomBorder, "       \\", "        \\"].join(
+        "\n",
+    );
+}
+
+// Preformatting keeps the build-time fallback and client-rendered bubbles identical.
+const renderedFortunes: RenderedFortune[] = fortunes.map((message) => ({
+    message,
+    bubble: createCowsayBubble(message),
+}));
+
+// Static builds need an initial fortune for the rendered HTML and metadata.
+const fallbackFortune = renderedFortunes[0];
+---
+
+<BaseLayout 
+    title="404 | Page not found" 
+    description={fallbackFortune.message}>
+    <!-- Positions the ASCII dialogue above and to the right of Tohru's avatar. -->
+    <section class="not-found" aria-label="Page not found">
+        {
+            /**
+             * The preformatted fortunes bridge Astro's build-time formatter
+             * and the browser randomizer without duplicating wrapping logic.
+             */
+        }
+        <pre
+            class="not-found__message"
+            role="img"
+            aria-label={fallbackFortune.message}
+            data-fortunes={JSON.stringify(
+                renderedFortunes,
+            )}>{fallbackFortune.bubble}</pre>
+
+        <!-- The photograph takes the place of the cow in the cowsay output. -->
+        <Image
+            class="not-found__avatar"
+            src={tohru404}
+            alt="Tohru, the cat engineer, investigating a missing page."
+            width={112}
+            height={112}
+            densities={[1.5, 2]}
+            priority
+        />
+    </section>
+
+    <SiteNavigation slot="sidebar" />
+</BaseLayout>
+
+<script>
+    const STORAGE_KEY = "last-404-fortune";
+
+    interface RenderedFortune {
+        message: string;
+        bubble: string;
+    }
+
+    /** Validates a serialized fortune and its preformatted ASCII bubble. */
+    function isRenderedFortune(value: unknown): value is RenderedFortune {
+        if (!value || typeof value !== "object") return false;
+
+        const fortune = value as Partial<RenderedFortune>;
+
+        return (
+            typeof fortune.message === "string" &&
+            fortune.message.trim().length > 0 &&
+            typeof fortune.bubble === "string" &&
+            fortune.bubble.trim().length > 0
+        );
+    }
+
+    /** Parses the prepared fortune list stored on the message element by Astro. */
+    function parseFortunes(element: HTMLElement): RenderedFortune[] {
+        try {
+            const parsed: unknown = JSON.parse(
+                element.dataset.fortunes ?? "[]",
+            );
+
+            return Array.isArray(parsed)
+                ? parsed.filter(isRenderedFortune)
+                : [];
+        } catch {
+            return [];
+        }
+    }
+
+    /** Reads the previously displayed message when session storage is usable. */
+    function readPreviousFortune(): string | null {
+        try {
+            return sessionStorage.getItem(STORAGE_KEY);
+        } catch {
+            return null;
+        }
+    }
+
+    /** Remembers a message so the next reload can avoid repeating it. */
+    function rememberFortune(message: string): void {
+        try {
+            sessionStorage.setItem(STORAGE_KEY, message);
+        } catch {
+            // Storage can be unavailable without affecting the page.
+        }
+    }
+
+    /** Chooses a random message while avoiding an immediate repeat. */
+    function selectFortune(
+        fortunes: RenderedFortune[],
+        previousFortune: string | null,
+    ): RenderedFortune | undefined {
+        const candidates =
+            fortunes.length > 1
+                ? fortunes.filter(
+                      (fortune) => fortune.message !== previousFortune,
+                  )
+                : fortunes;
+
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    /** Keeps all description metadata aligned with the visible message. */
+    function updateDescriptionMetadata(message: string): void {
+        const selector = [
+            'meta[name="description"]',
+            'meta[property="og:description"]',
+            'meta[name="twitter:description"]',
+        ].join(",");
+
+        document.querySelectorAll(selector).forEach((meta) => {
+            meta.setAttribute("content", message);
+        });
+    }
+
+    /** Selects and renders the message for the current page load. */
+    function renderFortune(): void {
+        const messageElement = document.querySelector<HTMLElement>(
+            ".not-found__message[data-fortunes]",
+        );
+
+        if (!messageElement) return;
+
+        const fortune = selectFortune(
+            parseFortunes(messageElement),
+            readPreviousFortune(),
+        );
+
+        if (!fortune) return;
+
+        messageElement.textContent = fortune.bubble;
+        messageElement.setAttribute("aria-label", fortune.message);
+        updateDescriptionMetadata(fortune.message);
+        rememberFortune(fortune.message);
+    }
+
+    renderFortune();
+</script>
+
+<style>
+    /* Builds a compact cowsay scene without adding a card or panel surface. */
+    .not-found {
+        display: flex;
+        width: fit-content;
+        max-width: 100%;
+        margin-inline: auto;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Places Tohru below the bubble, where cowsay normally renders its cow. */
+    .not-found__avatar {
+        display: block;
+        width: 112px;
+        height: 112px;
+        margin-inline-start: var(--space-lg);
+        border: 3px solid var(--card-bg);
+        border-radius: var(--radius);
+        outline: 1px solid var(--border-strong);
+        object-fit: cover;
+    }
+
+    /* Preserves every character and space in the generated ASCII dialogue. */
+    .not-found__message {
+        align-self: flex-end;
+        max-width: 100%;
+        margin: 0;
+        margin-inline-start: var(--space-xl);
+        color: var(--text-main);
+        font-family:
+            ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas,
+            monospace;
+        font-size: clamp(0.625rem, 0.5rem + 0.5vw, var(--font-2xs));
+        line-height: 1.2;
+        overflow-x: auto;
+        white-space: pre;
+    }
+</style>
