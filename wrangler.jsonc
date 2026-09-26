@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "atl97853-website-cloudflare",
+  "name": "atl97853-website",
   "compatibility_date": "2026-01-21",
   "assets": {
     "directory": "./dist",
