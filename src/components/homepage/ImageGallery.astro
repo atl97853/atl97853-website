@@ -1,6 +1,6 @@
 ---
 /**
- * Displays up to four recent images defined in a JSON file.
+ * Displays up to nine recent images defined in a JSON file.
  *
  * Each JSON entry contains only editorial data (`src`, `alt`, and
  * `description`). Image dimensions and optimized output URLs come from the
@@ -39,18 +39,20 @@ interface ResolvedGalleryImage {
     description: string;
 }
 
-const IMAGE_LIMIT = 4;
+const IMAGE_LIMIT = 9;
 
 /*
  * Thumbnail candidates cover the gallery's real desktop column width at common
  * display densities. Astro ignores widths larger than an original asset, so
  * this list improves sharpness without creating artificial upscales.
  */
-const THUMBNAIL_WIDTHS = [240, 360, 480, 640, 720, 960, 1200];
+const THUMBNAIL_WIDTHS = [160, 240, 320, 480, 640, 960, 1200];
 
-const THUMBNAIL_SIZES = ["(max-width: 25rem) calc(100vw - 1rem)", "17rem"].join(
-    ", ",
-);
+const THUMBNAIL_SIZES = [
+    "(max-width: 32rem) 94vw",
+    "(max-width: 52rem) 24vw",
+    "14rem",
+].join(", ");
 
 /*
  * Expanded images receive a responsive source set rather than one fixed file.
@@ -203,7 +205,7 @@ const images: NormalizedGalleryImage[] = await Promise.all(
                                     {/*
                                      * The source set covers the rendered
                                      * column at common display densities. The
-                                     * intrinsic ratio keeps the masonry layout
+                                     * intrinsic ratio keeps the grid layout
                                      * stable before the image finishes loading.
                                      */}
                                     <Image
@@ -213,7 +215,7 @@ const images: NormalizedGalleryImage[] = await Promise.all(
                                         widths={THUMBNAIL_WIDTHS}
                                         sizes={THUMBNAIL_SIZES}
                                         quality="max"
-                                        loading="eager"
+                                        loading={index === 0 ? "eager" : "lazy"}
                                         decoding="async"
                                     />
                                 </button>
@@ -222,6 +224,9 @@ const images: NormalizedGalleryImage[] = await Promise.all(
                                     class="recent-images__description"
                                     id={descriptionId}
                                 >
+                                    <span class="recent-images__index" aria-hidden="true">
+                                        #{String(index + 1).padStart(2, "0")}
+                                    </span>
                                     {image.description}
                                 </figcaption>
                             </figure>
@@ -517,64 +522,43 @@ const images: NormalizedGalleryImage[] = await Promise.all(
 </script>
 
 <style>
-    /*
-     * Keep the shared Panel primitive generic while aligning this heading with
-     * the content padding used throughout the homepage.
-     */
-    .recent-images > :global(.panel__heading) {
-        padding: var(--space-md);
-        border-bottom: var(--border-width) solid var(--border);
-    }
-
-    /*
-     * The gallery deliberately stays narrower than the main column. Combined
-     * with two masonry columns, --gallery-width produces cards close to the
-     * requested 255px scale without stretching every image to fill the panel.
-     */
     .recent-images__gallery {
         display: block;
         padding: var(--space-md);
     }
 
-    /*
-     * CSS columns preserve each image's natural aspect ratio and create the
-     * compact Pinterest-like flow. Astro's intrinsic dimensions reserve each
-     * thumbnail's space before its optimized file finishes loading.
-     */
     .recent-images__grid {
+        display: grid;
         width: min(100%, var(--gallery-width));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-md);
         margin-inline: auto;
-        column-count: 2;
-        column-gap: var(--space-sm);
     }
 
     .recent-images__grid[data-image-count="1"] {
-        width: min(
-            100%,
-            calc((var(--gallery-width) - var(--space-sm)) / 2)
-        );
-        column-count: 1;
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 22rem;
     }
 
-    /*
-     * A figure owns the visual card and its caption. `inline-block` and
-     * `break-inside` keep each pair together in the masonry flow.
-     */
     .recent-images__item {
-        display: inline-block;
-        width: 100%;
-        margin: 0 0 var(--space-sm);
+        display: grid;
+        min-width: 0;
+        grid-template-rows: auto 1fr;
         overflow: hidden;
-        break-inside: avoid;
         border: var(--border-width) solid var(--border);
         border-radius: var(--radius);
         background: var(--card-bg);
-        vertical-align: top;
+        transition:
+            border-color 120ms ease,
+            box-shadow 120ms ease,
+            transform 120ms ease;
     }
 
     .recent-images__item:hover,
     .recent-images__item:focus-within {
-        border-color: var(--link-hover);
+        border-color: var(--link-main);
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
     }
 
     /*
@@ -610,29 +594,35 @@ const images: NormalizedGalleryImage[] = await Promise.all(
 
     .recent-images__thumbnail {
         display: block;
-
-        /*
-     * Large sources shrink to the column, while a source narrower than the
-     * column keeps its intrinsic width instead of being enlarged and blurred.
-     */
-        width: auto;
-        max-width: 100%;
+        width: 100%;
+        aspect-ratio: 1;
         height: auto;
-        margin-inline: auto;
         background: var(--surface-soft);
+        object-fit: cover;
         image-rendering: auto;
     }
 
     .recent-images__description {
-        display: block;
-        padding: var(--space-sm) var(--space-md);
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        align-items: baseline;
+        gap: var(--space-xs);
+        padding: var(--space-sm);
         border-top: var(--border-width) solid var(--border);
         background: var(--card-bg);
-        color: var(--text-muted);
+        color: var(--text-main);
         font-size: var(--font-xs);
         line-height: 1.45;
         overflow-wrap: anywhere;
         text-wrap: pretty;
+    }
+
+    .recent-images__index {
+        color: var(--link-main);
+        font-family: var(--font-mono);
+        font-size: var(--font-2xs);
+        font-weight: var(--fw-bold);
+        white-space: nowrap;
     }
 
     .recent-images__trigger:focus-visible {
@@ -744,19 +734,24 @@ const images: NormalizedGalleryImage[] = await Promise.all(
         line-height: 1.45;
     }
 
-    /* Tighten the panel body before collapsing the gallery to one column. */
-    @media (max-width: 38rem) {
+    @media (max-width: 32rem) {
         .recent-images__gallery {
             padding: var(--space-sm);
         }
+
+        .recent-images__grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .recent-images__grid[data-image-count="1"] {
+            grid-template-columns: minmax(0, 1fr);
+        }
     }
 
-    /* Very narrow screens display a single full-width preview column. */
-    @media (max-width: 25rem) {
+    @media (max-width: 20rem) {
         .recent-images__grid,
         .recent-images__grid[data-image-count="1"] {
-            width: 100%;
-            column-count: 1;
+            grid-template-columns: minmax(0, 1fr);
         }
     }
 </style>

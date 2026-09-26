@@ -22,6 +22,12 @@ interface AudioTrack {
 // guarantees that the initial <source> always has a valid track.
 const playlist = [
     { 
+        title: "Procrastination 拖延症 ",
+        artist: "Diverseddie 舵",
+        src: "/audio/10_procrastination-diverseddie.mp3",
+        type: "audio/mpeg",
+    },
+    { 
         title: "Bluebird",
         artist: "Still & Bense",
         src: "/audio/07-bluebird-still-and-bense.mp3",
@@ -1052,14 +1058,14 @@ const firstTrack = playlist[0];
 
 <style>
     /*
-     * The player borrows the reference's compact indigo hardware shell while
-     * deriving every color from the site's existing blue-violet palette.
+     * The player borrows a compact retro hardware shell while deriving most
+     * of its color from the site's blue and slate theme tokens.
      * Local role aliases keep the decorative treatment isolated from behavior.
      */
     .music-player {
         --music-player-max-width: 26rem;
-        --music-player-radius: 0.55rem;
-        --music-player-inner-radius: 0.3rem;
+        --music-player-radius: var(--radius);
+        --music-player-inner-radius: 0.2rem;
 
         --music-player-frame: color-mix(
             in srgb,
@@ -1431,7 +1437,7 @@ const firstTrack = playlist[0];
 
     /*
      * Circular, beveled controls are the reference skin's strongest motif.
-     * Their hover and keyboard states still use the site's pink link accent.
+     * Hover and keyboard states use the site's blue link accent.
      */
     .music-player__transport-button,
     .music-player__mute-button {

@@ -84,22 +84,22 @@ const links = items
     .c-nav-list {
         display: flex;
         flex-direction: column;
-        gap: var(--component-nav-list-gap);
-        padding: var(--component-nav-list-padding);
+        gap: var(--space-xs);
+        padding: var(--space-sm);
     }
 
     .c-nav-list__link {
         display: block;
-        padding: var(--component-nav-link-padding);
-        color: var(--clr-link-main);
-        font-size: var(--fs-sm);
-        line-height: var(--lh-link);
-        text-decoration: var(--component-link-decoration);
+        padding: var(--space-xs) var(--space-sm);
+        color: var(--link-main);
+        font-size: var(--font-sm);
+        line-height: 1.4;
+        text-decoration: none;
         overflow-wrap: break-word;
     }
 
     .c-nav-list__link:hover,
     .c-nav-list__link:focus-visible {
-        color: var(--clr-link-hover);
+        color: var(--link-hover);
     }
 </style>

@@ -9,10 +9,7 @@ interface Props {
     description: string;
 }
 
-const {
-    title,
-    description,
-} = Astro.props;
+const { title, description } = Astro.props;
 
 /*
  * Only emit a canonical URL when Astro has a production origin configured.
@@ -27,72 +24,21 @@ const canonicalURL = Astro.site
  * layout modifier.
  */
 const hasSidebar = Astro.slots.has("sidebar");
+const hasToolbar = Astro.slots.has("toolbar");
 ---
 
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content={description} />
-        <meta name="color-scheme" content="dark light" />
-        <meta name="theme-color" content="#8792a6" />
+        <meta name="color-scheme" content="light" />
+        <meta name="theme-color" content="#e8edf2" />
 
         {canonicalURL && <link rel="canonical" href={canonicalURL} />}
 
         <title>{title}</title>
-
-        <script is:inline>
-            (() => {
-                const STORAGE_KEY = "site-theme";
-                const root = document.documentElement;
-                const themeColor = document.querySelector(
-                    'meta[name="theme-color"]',
-                );
-
-                /*
-                 * Light is the site default. A saved visitor choice is the only
-                 * condition that overrides it before the first paint.
-                 */
-                let theme = "light";
-
-                try {
-                    const savedTheme = localStorage.getItem(STORAGE_KEY);
-
-                    if (savedTheme === "light" || savedTheme === "dark") {
-                        theme = savedTheme;
-                    }
-                } catch {
-                    // Keep the default theme when storage is unavailable.
-                }
-
-                /*
-                 * Read the active theme token instead of duplicating both theme
-                 * colors in this layout. Observing `data-theme` also keeps the
-                 * browser chrome synchronized with later control changes.
-                 */
-                const syncThemeColor = () => {
-                    const currentThemeColor = getComputedStyle(root)
-                        .getPropertyValue("--theme-color")
-                        .trim();
-
-                    if (currentThemeColor) {
-                        themeColor?.setAttribute(
-                            "content",
-                            currentThemeColor,
-                        );
-                    }
-                };
-
-                root.dataset.theme = theme;
-                syncThemeColor();
-
-                new MutationObserver(syncThemeColor).observe(root, {
-                    attributes: true,
-                    attributeFilter: ["data-theme"],
-                });
-            })();
-        </script>
     </head>
 
     <body>
@@ -102,6 +48,19 @@ const hasSidebar = Astro.slots.has("sidebar");
             <div class="site-shell">
                 <div class="site-viewport">
                     <SiteHeader />
+
+                    <div class="page-toolbar">
+                        <nav class="home-toolbar" aria-label="Breadcrumb">
+                            <p class="home-toolbar__crumbs">
+                                <a href="/">atl97853</a>
+                                <span aria-hidden="true">/</span>
+                                <span aria-current="page">home</span>
+                            </p>
+                            <span class="home-toolbar__note"
+                                >personal webspace · notes &amp; snapshots</span
+                            >
+                        </nav>
+                    </div>
 
                     <div
                         class:list={[
@@ -137,16 +96,18 @@ const hasSidebar = Astro.slots.has("sidebar");
     </body>
 </html>
 
-{/*
- * `page-grid` provides the default one-column layout.
- *
- * When a sidebar slot exists, `class:list` also applies
- * `page-grid--with-sidebar`, which creates the desktop sidebar column and
- * collapses to one column at the tablet breakpoint.
- *
- * `--site-gutter` represents the shell's horizontal inner spacing. Child
- * components inherit it so header elements and page content share one edge.
- */}
+{
+    /*
+     * `page-grid` provides the default one-column layout.
+     *
+     * When a sidebar slot exists, `class:list` also applies
+     * `page-grid--with-sidebar`, which creates the desktop sidebar column and
+     * collapses to one column on narrow phone screens.
+     *
+     * `--site-gutter` represents the shell's horizontal inner spacing. Child
+     * components inherit it so header elements and page content share one edge.
+     */
+}
 <style>
     .skip-link {
         position: fixed;
@@ -190,7 +151,7 @@ const hasSidebar = Astro.slots.has("sidebar");
         max-width: var(--shell-max-width);
         border: var(--border-width) solid var(--border-strong);
         background: var(--page-shell);
-        /* box-shadow: var(--shadow); */
+        box-shadow: var(--shadow);
     }
 
     /*
@@ -204,6 +165,55 @@ const hasSidebar = Astro.slots.has("sidebar");
         padding: var(--space-none) var(--site-gutter) var(--space-md);
 
         background: var(--page-shell);
+    }
+
+    .page-toolbar {
+        margin-block: var(--space-sm);
+        border: var(--border-width) solid var(--border);
+        border-radius: var(--radius);
+        background: var(--container-bg);
+    }
+
+    .home-toolbar {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-md);
+        padding: 0.55rem var(--space-md);
+        color: var(--text-muted);
+        font-size: var(--font-xs);
+    }
+
+    .home-toolbar__crumbs {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        min-width: 0;
+        margin: 0;
+        color: var(--text-strong);
+        font-family: var(--font-mono);
+        font-size: var(--font-xs);
+        font-weight: var(--fw-semibold);
+    }
+
+    .home-toolbar__crumbs a {
+        color: var(--link-main);
+        text-decoration: none;
+    }
+
+    .home-toolbar__note {
+        font-family: var(--font-mono);
+        font-size: var(--font-2xs);
+        text-align: end;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 32rem) {
+        .home-toolbar__note {
+            display: none;
+        }
     }
 
     .page-grid {
@@ -248,7 +258,7 @@ const hasSidebar = Astro.slots.has("sidebar");
      * Stack the sidebar and main content before either column becomes cramped.
      * The sidebar remains first because it contains the primary site navigation.
      */
-    @media (max-width: 52rem) {
+    @media (max-width: 32rem) {
         .desktop-stage {
             min-height: 0;
             place-items: start stretch;
@@ -273,7 +283,7 @@ const hasSidebar = Astro.slots.has("sidebar");
      * On small phones, remove the decorative shadow and reduce the final
      * vertical gap without changing the site's bordered, nostalgic shell.
      */
-    @media (max-width: 38rem) {
+    @media (max-width: 32rem) {
         .site-shell {
             box-shadow: none;
         }

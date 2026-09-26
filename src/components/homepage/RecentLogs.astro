@@ -117,15 +117,6 @@ const logs = logEntries
 </Panel>
 
 <style>
-    /*
-     * Keep the shared Panel primitive generic while aligning this heading with
-     * the content padding used throughout the homepage.
-     */
-    .recent-logs > :global(.panel__heading) {
-        padding: var(--space-md);
-        border-bottom: var(--border-width) solid var(--border);
-    }
-
     .recent-logs__list {
         display: grid;
         margin: 0;
@@ -180,6 +171,27 @@ const logs = logEntries
     @media (max-width: 38rem) {
         .recent-logs__item {
             padding-inline: var(--space-sm);
+        }
+    }
+
+    @media (max-width: 32rem) {
+        .recent-logs__item {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 2px;
+        }
+
+        .recent-logs__timestamp,
+        .recent-logs__description {
+            grid-column: 1;
+        }
+
+        .recent-logs__timestamp {
+            grid-row: 1;
+            text-align: start;
+        }
+
+        .recent-logs__description {
+            grid-row: 2;
         }
     }
 </style>

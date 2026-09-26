@@ -14,11 +14,14 @@ description: "Notes about my coursework and academic studies."
 ---
 
 *Fall 2026*
-- Fundamentals of the Internet (web dev)
-- Web Design Principles (web dev)
-- Systematic View of Technologies (web dev)
-- Project I (web dev)
+- Differential Calculus - [*(Khan academy - differential calculus)*](https://www.khanacademy.org/math/differential-calculus)
+- Programming Fundamentals - [*(Angela Yu - 100 Days of Code)*](https://www.udemy.com/share/103IHM/) -> *(Although this is just a recommendation for TecNM Virtual students, in my case, I will only be studying SICP JS.)*
+- Ethics Workshop
+- Discrete Mathematics - [*(UC Berkeley - CS70)*](https://www.eecs70.org/)
+- Management Workshop
+- Research Fundamentals
 ---
 - [*SICP JS edition* *(extra)*](https://about.sourceacademy.org/learner/README.html)
 - [*The Missing Semester of Your CS Education* *(extra)*](https://missing.csail.mit.edu/)
+- [*Meta Full Stack Developer: Front-End & Back-End from Scratch Specialization* *(extra)*](https://www.coursera.org/specializations/meta-full-stack-developer)
 ---

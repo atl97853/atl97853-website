@@ -1,30 +1,18 @@
 ---
 /**
- * Nested layout for text-heavy Markdown pages in `src/pages`.
- *
- * Markdown pages select this layout through their special `layout`
- * frontmatter property. Astro provides the page metadata through
- * `Astro.props.frontmatter` and inserts the rendered Markdown body into
- * the default `<slot />`.
- *
- * BaseLayout provides the document shell. This layout adds the content
- * Panel and SiteNavigation sidebar.
+ * Layout for text-heavy Markdown pages. Markdown frontmatter supplies the
+ * page heading and optional browser title and description; BaseLayout owns
+ * the document shell and sidebar grid.
  */
 import BaseLayout from "@layouts/BaseLayout.astro";
-
+import HomeIntro from "@components/homepage/HomeIntro.astro";
 import SiteNavigation from "@components/layout/SiteNavigation.astro";
 import Panel from "@components/primitives/Panel.astro";
-
 import type { MarkdownLayoutProps } from "astro";
 
 type Props = MarkdownLayoutProps<{
-    /** Heading displayed at the top of the page panel. */
     title: string;
-
-    /** Optional browser-tab title. Defaults to `title`. */
     pageTitle?: string;
-
-    /** Optional meta description. Defaults to `title`. */
     description?: string;
 }>;
 
@@ -37,92 +25,64 @@ const {
 } = frontmatter;
 ---
 
-<BaseLayout
-    title={pageTitle}
-    description={description}
->
+<BaseLayout title={pageTitle} description={description}>
     <Panel
         as="article"
         class="nested-markdown-layout"
         title={panelTitle}
         headingLevel="h1"
     >
-        {/*
-            * Astro replaces `<slot />` with the HTML generated from the Markdown body.
-            * It converts the Markdown body into HTML and passes that HTML as the layout’s default slot.
-            * You do not see an explicit component invocation because Astro creates that relationship from the Markdown file’s layout property.
-            * The wrapper provides a local styling boundary for that generated HTML.
-        */}
         <div class="nested-markdown-layout__content">
             <slot />
         </div>
     </Panel>
 
-    <SiteNavigation slot="sidebar" />
+    <Fragment slot="toolbar">
+        <nav class="home-toolbar" aria-label="Breadcrumb">
+            <p class="home-toolbar__crumbs">
+                <a href="/">atl97853</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">home</span>
+            </p>
+            <span class="home-toolbar__note">personal webspace · notes &amp; snapshots</span>
+        </nav>
+    </Fragment>
+
+    <Fragment slot="sidebar">
+        <HomeIntro />
+        <SiteNavigation />
+    </Fragment>
 </BaseLayout>
 
-{/*
-    * Your narrow use of :global(.panel__heading) is correct. 
-    * The scoped .markdown-page parent prevents it from affecting every Panel. 
-    * If you later style generated Markdown elements, use similarly bounded 
-    * selectors.
- */}
 <style>
-    /* Scoped Panel override */
     .nested-markdown-layout {
-        /* Prevent wide Markdown content from expanding the layout column. */
-        width: 100%;
         min-width: 0;
         max-width: 100%;
     }
 
-    .nested-markdown-layout > :global(.panel__heading) {
-        padding: 0.82rem var(--space-md);
-        border-bottom: 1px solid var(--border);
-    }
-    /* Scoped Panel override */
-
-    /*
-     * Markdown is rendered as slotted HTML, so its elements do not receive
-     * this component's Astro scope attribute. Bounded :global() selectors
-     * allow us to style them without affecting Markdown elsewhere.
-     * Constrain the outer panel and content.
-     */
+    /* Markdown output is slotted HTML, so its elements need bounded globals. */
     .nested-markdown-layout__content {
-        width: 100%;
         min-width: 0;
-        max-width: 100%;
         padding: 0.82rem var(--space-md);
         color: var(--text-main);
         font-size: var(--font-md);
-        /*
-         * !!! Core reading rhythm.
-         * This controls spacing between lines within the same paragraph.
-         */
-        line-height: 1.4;
+        line-height: 1.45;
         overflow-wrap: anywhere;
     }
-  /* Remove unwanted space at the beginning and end of the Markdown body. */
+
     .nested-markdown-layout__content > :global(*:first-child) {
-        margin-top: 0;
+        margin-block-start: 0;
     }
 
     .nested-markdown-layout__content > :global(*:last-child) {
-        margin-bottom: 0;
+        margin-block-end: 0;
     }
 
-    /*
-     * !!! Core paragraph rhythm.
-     * Blank lines in Markdown create separate <p> elements, and this margin
-     * creates the visible space between those paragraphs.
-     */
     .nested-markdown-layout__content :global(p) {
-        margin-top: 0;
-        margin-bottom: var(--space-md);
+        margin-block: 0 var(--space-md);
         text-wrap: pretty;
     }
 
-    /* Shared typography for headings generated from Markdown. */
     .nested-markdown-layout__content :global(h1),
     .nested-markdown-layout__content :global(h2),
     .nested-markdown-layout__content :global(h3),
@@ -136,16 +96,13 @@ const {
         text-wrap: pretty;
     }
 
-    /*
-     * The Panel heading is already the page-level h1. Markdown content should
-     * generally begin with h2, but h1 is styled defensively in case one is used.
-     */
+    /* The Panel heading is the page h1; Markdown sections start at h2. */
     .nested-markdown-layout__content :global(h1),
     .nested-markdown-layout__content :global(h2) {
         margin: var(--space-lg) 0 var(--space-sm);
-        padding-bottom: var(--space-xs);
+        padding-block-end: var(--space-xs);
+        border-bottom: var(--border-width) solid var(--border);
         font-size: var(--font-md);
-        border-bottom: 1px solid var(--border);
     }
 
     .nested-markdown-layout__content :global(h3) {
@@ -160,11 +117,10 @@ const {
         font-size: var(--font-sm);
     }
 
-    /* Keep links recognizable while increasing emphasis on interaction. */
     .nested-markdown-layout__content :global(a) {
         color: var(--link-main);
         text-decoration: underline;
-        text-decoration-thickness: 1px;
+        text-decoration-thickness: var(--border-width);
         text-underline-offset: 0.16em;
     }
 
@@ -178,11 +134,9 @@ const {
         outline-offset: 2px;
     }
 
-    /* Restore predictable Markdown list spacing and marker styles. */
     .nested-markdown-layout__content :global(ul),
     .nested-markdown-layout__content :global(ol) {
-        margin-top: 0;
-        margin-bottom: var(--space-md);
+        margin-block: 0 var(--space-md);
         padding-inline-start: 1.2rem;
     }
 
@@ -195,38 +149,33 @@ const {
     }
 
     .nested-markdown-layout__content :global(li + li) {
-        margin-top: 0.2rem;
+        margin-block-start: 0.2rem;
     }
 
     .nested-markdown-layout__content :global(li > ul),
     .nested-markdown-layout__content :global(li > ol) {
-        margin-top: var(--space-xs);
-        margin-bottom: 0;
+        margin-block: var(--space-xs) 0;
     }
 
-    /* Blockquotes remain visually distinct without becoming a second card. */
     .nested-markdown-layout__content :global(blockquote) {
         margin: var(--space-md) 0;
-        padding-inline-start: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        border-inline-start: 3px solid var(--link-main);
+        background: var(--surface-soft);
         color: var(--text-muted);
-        border-inline-start: 2px solid var(--border);
     }
 
-    .nested-markdown-layout__content :global(blockquote > *:last-child) {
-        margin-bottom: 0;
+    .nested-markdown-layout__content :global(blockquote > :last-child) {
+        margin-block-end: 0;
     }
 
-    /*
-     * Images and figures stay within the available content column while
-     * retaining their natural aspect ratio.
-     */
     .nested-markdown-layout__content :global(img) {
         display: block;
         box-sizing: border-box;
         max-width: 100%;
         height: auto;
         margin: var(--space-md) auto;
-        border: 1px solid var(--border);
+        border: var(--border-width) solid var(--border);
         border-radius: var(--radius);
     }
 
@@ -239,16 +188,12 @@ const {
     }
 
     .nested-markdown-layout__content :global(figcaption) {
-        margin-top: var(--space-xs);
+        margin-block-start: var(--space-xs);
         color: var(--text-muted);
         font-size: var(--font-sm);
         line-height: var(--line-height-reading);
     }
 
-    /*
-     * Responsive embeds use their available column width. The aspect ratio
-     * gives iframe-based media a stable height when the source omits one.
-     */
     .nested-markdown-layout__content :global(iframe),
     .nested-markdown-layout__content :global(video),
     .nested-markdown-layout__content :global(embed),
@@ -258,75 +203,51 @@ const {
     }
 
     .nested-markdown-layout__content :global(iframe) {
-        aspect-ratio: 16 / 9;
         height: auto;
+        aspect-ratio: 16 / 9;
     }
 
-    /* Inline code receives a compact visual treatment within prose. */
     .nested-markdown-layout__content :global(code) {
         padding: 0.1rem 0.3rem;
-        overflow-wrap: anywhere;
-        word-break: break-word;
-        color: var(--text-strong);
-        background: var(--surface-hover);
-        border: 1px solid var(--border);
+        border: var(--border-width) solid var(--border);
         border-radius: var(--radius);
-        font-family:
-            var(
-                --font-mono,
-                ui-monospace,
-                SFMono-Regular,
-                Consolas,
-                "Liberation Mono",
-                monospace
-            );
+        background: var(--surface-soft);
+        color: var(--text-strong);
+        font-family: var(--font-mono, ui-monospace, Consolas, monospace);
         font-size: 0.9em;
         font-variant-ligatures: none;
+        overflow-wrap: anywhere;
     }
 
-    /*
-     * Fenced blocks preserve whitespace so they can display source code
-     * and simple ASCII art without losing character alignment.
-     */
     .nested-markdown-layout__content :global(pre) {
         box-sizing: border-box;
         max-width: 100%;
         margin: var(--space-md) 0;
         padding: var(--space-md);
         overflow-x: auto;
-        overflow-wrap: normal;
-        color: var(--text-main);
-        background: var(--surface-hover);
-        border: 1px solid var(--border);
+        border: var(--border-width) solid var(--border);
         border-radius: var(--radius);
+        background: var(--surface-soft);
+        color: var(--text-main);
         tab-size: 4;
         white-space: pre;
         -webkit-overflow-scrolling: touch;
     }
 
-    /*
-     * Reset the inline-code appearance when code is nested inside a fenced
-     * block. The surrounding <pre> owns the block surface.
-     */
     .nested-markdown-layout__content :global(pre code) {
         display: block;
         min-width: max-content;
         padding: 0;
-        color: inherit;
-        background: transparent;
         border: 0;
         border-radius: 0;
+        background: transparent;
+        color: inherit;
         font-size: var(--font-sm);
         line-height: 1.6;
         overflow-wrap: normal;
-        word-break: normal;
         white-space: inherit;
     }
 
-    /*
-     * Wide tables remain inside the Panel and scroll horizontally instead of
-     * forcing the main layout column to expand.
-     */
     .nested-markdown-layout__content :global(table) {
         display: block;
         box-sizing: border-box;
@@ -341,37 +262,77 @@ const {
     .nested-markdown-layout__content :global(th),
     .nested-markdown-layout__content :global(td) {
         padding: var(--space-xs) var(--space-sm);
-        border: 1px solid var(--border);
+        border: var(--border-width) solid var(--border);
         text-align: start;
         vertical-align: top;
     }
 
     .nested-markdown-layout__content :global(th) {
+        background: var(--surface-soft);
         color: var(--text-strong);
         font-weight: var(--fw-semibold);
-        background: var(--surface-hover);
     }
 
     .nested-markdown-layout__content :global(hr) {
         height: 0;
         margin: var(--space-lg) 0;
         border: 0;
-        border-top: 1px solid var(--border);
+        border-top: var(--border-width) solid var(--border);
     }
 
     .nested-markdown-layout__content :global(.katex-display),
     .nested-markdown-layout__content :global(.math-display),
     .nested-markdown-layout__content :global(mjx-container[display="true"]) {
         max-width: 100%;
+        padding-block: var(--space-xs);
         overflow-x: auto;
         overflow-y: hidden;
-        padding-block: var(--space-xs);
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Reduce indentation and block padding on narrow screens. */
+    .home-toolbar {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-md);
+        padding: 0.55rem var(--space-md);
+        color: var(--text-muted);
+        font-size: var(--font-xs);
+    }
+
+    .home-toolbar__crumbs {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        min-width: 0;
+        margin: 0;
+        color: var(--text-strong);
+        font-family: var(--font-mono);
+        font-size: var(--font-xs);
+        font-weight: var(--fw-semibold);
+    }
+
+    .home-toolbar__crumbs a {
+        color: var(--link-main);
+        text-decoration: none;
+    }
+
+    .home-toolbar__note {
+        font-family: var(--font-mono);
+        font-size: var(--font-2xs);
+        text-align: end;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 32rem) {
+        .home-toolbar__note {
+            display: none;
+        }
+    }
+
     @media (max-width: 38rem) {
-        .nested-markdown-layout > :global(.panel__heading),
         .nested-markdown-layout__content {
             padding-inline: var(--space-sm);
         }

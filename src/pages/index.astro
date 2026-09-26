@@ -5,9 +5,8 @@ import SiteNavigation from "@components/layout/SiteNavigation.astro";
 import MusicPlayer from "@components/layout/MusicPlayer.astro";
 import HomeIntro from "@components/homepage/HomeIntro.astro";
 import RecentLogs from "@components/homepage/RecentLogs.astro";
-import ImageGallery from "@components/homepage/ImageGallery.astro";
 
-const tabTitle = "atl97853";
+const tabTitle = "Homepage";
 const metaDescription = "Hello, my name is Atl, and this is my personal website. Here I write about my studies, technology, books I have read, and other things I find interesting. Feel free to wander around.";
 ---
 
@@ -15,11 +14,10 @@ const metaDescription = "Hello, my name is Atl, and this is my personal website.
     title={tabTitle}
     description={metaDescription}
 >
-    <HomeIntro />
     <RecentLogs />
-    <ImageGallery />
 
     <Fragment slot="sidebar">
+        <HomeIntro />
         <SiteNavigation />
         <MusicPlayer />
     </Fragment>

@@ -4,30 +4,25 @@ import avatar from "@images/assets/02_avatar_image.jpg";
 
 import Panel from "@components/primitives/Panel.astro";
 
-const title = "Welcome to my website!";
+const title = "About the webmaster";
 ---
 
-<Panel 
-    as="section" 
-    class="home-intro"
-    title={title}
->
+<Panel as="section" class="home-intro" title={title}>
     <div class="home-intro__layout">
         <Image
             class="home-intro__avatar"
             src={avatar}
-            alt=""
-            width={100}
-            height={100}
+            alt="Personal profile image"
+            width={150}
+            height={150}
             densities={[1.5, 2]}
             priority
         />
 
         <p class="home-intro__description">
-            Hi, my name is <strong>Atl</strong>, and this is my personal
-            website. Here I write about my studies, technology, books I’ve
-            read, and other things I find interesting. Feel free to wander
-            around.
+            Hi ヾ(・ω・*), my name is <strong>Atl</strong>. I am a Computer Systems
+            Engineering student at TecNM, and this is my personal website. Feel
+            free to wander around.
         </p>
     </div>
 </Panel>
@@ -37,34 +32,21 @@ const title = "Welcome to my website!";
      * This component-specific measurement mirrors the intrinsic Image
      * dimensions above and keeps the repeated CSS dimensions synchronized.
      */
-    .home-intro {
-        --home-intro-avatar-size: 6.25rem;
-    }
-
-    /*
-     * Keep the shared Panel primitive generic while aligning this heading with
-     * the content padding used throughout the homepage.
-     */
-    .home-intro > :global(.panel__heading) {
-        padding: var(--space-md);
-        border-bottom: var(--border-width) solid var(--border);
-    }
-
     .home-intro__layout {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        align-items: center;
-        gap: var(--space-lg);
+        justify-items: start;
+        gap: var(--space-md);
         padding: var(--space-md);
     }
 
     .home-intro__avatar {
-        width: var(--home-intro-avatar-size);
-        height: var(--home-intro-avatar-size);
+        max-width: 10rem;
+        aspect-ratio: 1;
         border: var(--border-width) solid var(--border-strong);
         border-radius: var(--radius);
         background: var(--surface-soft);
         object-fit: cover;
+        justify-self: center;
     }
 
     .home-intro__description {
@@ -73,16 +55,5 @@ const title = "Welcome to my website!";
         line-height: 1.45;
         overflow-wrap: anywhere;
         text-wrap: pretty;
-    }
-
-    @media (max-width: 38rem) {
-        .home-intro__layout {
-            grid-template-columns: 1fr;
-            gap: var(--space-md);
-        }
-
-        .home-intro__avatar {
-            justify-self: center;
-        }
     }
 </style>

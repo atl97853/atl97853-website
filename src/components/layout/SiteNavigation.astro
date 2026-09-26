@@ -8,6 +8,11 @@ const navigationItems = [
         icon: "📁",
     },
     {
+        href: "/coursework",
+        label: "Coursework",
+        icon: "📄",
+    },
+    {
         href: "/about",
         label: "About",
         icon: "👤",
@@ -18,14 +23,9 @@ const navigationItems = [
         icon: "📁",
     },
     {
-        href: "/coursework",
-        label: "Coursework",
-        icon: "📄",
-    },
-    {
-        href: "/library",
-        label: "Library",
-        icon: "📖",
+        href: "/gallery",
+        label: "Gallery",
+        icon: "📷",
     },
 ] as const;
 
@@ -77,20 +77,7 @@ function isCurrent(href: string): boolean {
     </ul>
 </Panel>
 
-{/*
- * `.site-navigation > :global(.panel__heading)` keeps the override scoped to SiteNavigation.
- * .site-navigation remains local to this component, while .panel__heading
- * is global because it is rendered inside Panel. The direct-child selector
- * limits the rule to this navigation root, so other Panel headings elsewhere
- * will not match.
- */}
 <style>
-    /* Scoped Panel override */
-    .site-navigation > :global(.panel__heading) {
-        padding: 0.82rem var(--space-md);
-        border-bottom: 1px solid var(--border);
-    }
-    /* Scoped Panel override */
     .site-navigation__ul {
         display: grid;
         margin: 0;

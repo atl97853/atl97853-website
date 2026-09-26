@@ -1,102 +1,202 @@
 ---
-import { Image } from "astro:assets";
-import bannerImg from "@images/assets/banner_img.jpg";
 
-import ThemeControls from "./ThemeControls.astro";
 ---
 
-<header class="site-header">
-    <div class="site-header__toolbar">
-        <a class="site-header__identity" href="/">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                    fill="currentColor"
-                    d="M3 10.5 12 3l9 7.5v9A1.5 1.5 0 0 1 19.5 21H15v-6H9v6H4.5A1.5 1.5 0 0 1 3 19.5v-9Z"
-                />
-            </svg>
-            <span>atl97853</span>
+<header class="site-masthead" id="SiteHeader">
+    <img
+        class="site-masthead__image"
+        src="https://i.pinimg.com/1200x/59/ff/ec/59ffecad6db984001e789057203e07ee.jpg"
+        alt=""
+        aria-hidden="true"
+        loading="eager"
+    />
+    <div class="site-masthead__shade" aria-hidden="true"></div>
+    <!-- <span class="site-masthead__sparkle site-masthead__sparkle--left" aria-hidden="true">✦</span> -->
+    <!-- <span class="site-masthead__sparkle site-masthead__sparkle--right" aria-hidden="true">＋</span> -->
+
+    <div class="site-masthead__inner">
+        <a class="site-masthead__brand" href="/" aria-label="atl97853 home">
+            <span class="site-masthead__eyebrow">PERSONAL WEBSPACE</span>
+            <span class="site-masthead__wordmark">atl<span>97853</span></span>
+            <span class="site-masthead__tagline">Notes, small projects, and things I find interesting.</span>
         </a>
 
-        <ThemeControls />
-        
-    </div>
-
-    <div class="site-header__banner">
-        <Image
-            class="site-header__banner-image"
-            src={bannerImg}
-            alt=""
-            priority
-        />
+        <nav class="site-header-links" aria-label="Social links">
+            <a
+                class="site-header-link"
+                href="https://github.com/atl97853"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open GitHub profile"
+                title="GitHub"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8" />
+                </svg>
+            </a>
+        </nav>
     </div>
 </header>
 
 <style>
-    .site-header__toolbar {
+    .site-masthead {
+        position: relative;
+        isolation: isolate;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        min-height: var(--site-toolbar-min-height);
-        align-items: center;
-        gap: var(--space-md);
-        margin-inline: calc(var(--site-gutter) * -1);
-        margin-bottom: var(--space-lg);
-        padding: var(--space-xs) var(--site-gutter);
-
-        /*
-         * The shared tokens preserve the reference gradient across themes.
-         * Only the controls' hover accent follows the active theme palette.
-         */
-        border-bottom: var(--border-width) solid var(--site-toolbar-border);
-        background: var(--site-toolbar-background);
-        box-shadow: var(--site-toolbar-shadow);
+        min-height: clamp(5rem, 26vw, 10rem);
+        place-items: center;
+        margin-inline: calc(-1 * var(--site-gutter));
+        overflow: hidden;
+        border-bottom: 1px solid rgb(255 220 234 / 70%);
+        background: #372a4c;
     }
 
-    .site-header__identity {
-        display: inline-flex;
-        width: max-content;
+    .site-masthead__image,
+    .site-masthead__shade {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .site-masthead__image {
+        z-index: -2;
+        object-fit: cover;
+        object-position: center 68%;
+    }
+
+    .site-masthead__shade {
+        z-index: -1;
+        background:
+            linear-gradient(
+                90deg,
+                rgb(37 27 54 / 82%) 0%,
+                rgb(49 34 67 / 63%) 44%,
+                rgb(49 34 67 / 22%) 100%
+            ),
+            linear-gradient(0deg, rgb(37 27 54 / 28%), transparent 68%);
+    }
+
+    .site-masthead__inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        width: min(84%, 60rem);
         align-items: center;
-        gap: var(--space-sm);
-        color: var(--site-toolbar-text);
-        font-size: var(--font-md);
-        font-weight: var(--fw-bold);
+        justify-content: space-between;
+        gap: var(--space-lg);
+    }
+
+    .site-masthead__brand {
+        display: grid;
+        min-width: 0;
+        color: #fff8fc;
         text-decoration: none;
     }
 
-    .site-header__identity:visited {
-        color: var(--site-toolbar-text);
+    .site-masthead__eyebrow {
+        color: #ffe0ea;
+        font-family: var(--font-mono);
+        font-size: var(--font-2xs);
+        font-weight: var(--fw-bold);
+        letter-spacing: 0.18em;
     }
 
-    .site-header__identity:hover {
-        color: var(--link-hover-site-header);
+    .site-masthead__wordmark {
+        color: #fff8fc;
+        font-size: clamp(2.1rem, 6vw, 3.6rem);
+        font-weight: var(--fw-bold);
+        letter-spacing: -0.075em;
+        line-height: 0.95;
+        text-shadow: 0 2px 10px rgb(24 18 38 / 55%);
     }
 
-    .site-header__identity svg {
-        width: var(--site-toolbar-icon-size);
-        height: var(--site-toolbar-icon-size);
+    .site-masthead__wordmark span {
+        color: #ffc3bc;
     }
 
-    .site-header__banner {
-        margin: var(--space-none) var(--space-none) var(--space-lg);
-        overflow: hidden;
-        border: var(--border-width) solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card-bg);
-        /* box-shadow: var(--shadow); */
+    .site-masthead__tagline {
+        margin-top: var(--space-xs);
+        color: #fff1f5;
+        font-size: var(--font-xs);
+        line-height: 1.3;
     }
 
-    .site-header__banner-image {
-        width: 100%;
-        height: var(--site-banner-height);
-        object-fit: cover;
+    .site-masthead__sparkle {
+        position: absolute;
+        z-index: 0;
+        color: #ffd1df;
+        font-family: var(--font-mono);
+        font-weight: var(--fw-bold);
+        line-height: 1;
+        user-select: none;
+        text-shadow: 0 2px 12px rgb(32 22 47 / 35%);
     }
 
-    /*
-     * CSS custom properties cannot be used in media-query conditions, so the
-     * compact breakpoint remains explicit while its visual value is tokenized.
-     */
-    @media (max-width: 38rem) {
-        .site-header__banner-image {
-            height: var(--site-banner-compact-height);
+    .site-masthead__sparkle--left {
+        inset-inline-start: 6%;
+        inset-block-start: 28%;
+        font-size: clamp(1.5rem, 5vw, 2.75rem);
+    }
+
+    .site-masthead__sparkle--right {
+        inset-inline-end: 6%;
+        inset-block-end: 17%;
+        font-size: clamp(2rem, 6vw, 3.5rem);
+    }
+
+    .site-header-links {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: var(--theme-controls-gap);
+        padding: var(--theme-controls-padding);
+        border: 1px solid rgb(255 231 240 / 72%);
+        border-radius: 6px;
+        background: rgb(42 30 59 / 58%);
+        box-shadow: 0 3px 12px rgb(25 18 39 / 25%);
+        backdrop-filter: blur(8px);
+    }
+
+    .site-header-link {
+        display: inline-grid;
+        width: var(--theme-control-size);
+        height: var(--theme-control-size);
+        place-items: center;
+        border-radius: var(--theme-control-radius);
+        color: #fff4f8;
+        text-decoration: none;
+        transition: background-color 140ms ease, color 140ms ease;
+    }
+
+    .site-header-link svg {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .site-header-link:hover {
+        background: #f1abc2;
+        color: #392a4e;
+    }
+
+    .site-header-link:focus-visible {
+        outline: 2px solid #ffe1eb;
+        outline-offset: 1px;
+    }
+
+    @media (max-width: 32rem) {
+        .site-masthead__inner {
+            width: 88%;
+            gap: var(--space-sm);
+        }
+
+        .site-masthead__eyebrow {
+            font-size: 0.625rem;
+        }
+
+        .site-masthead__tagline {
+            max-width: 22ch;
+            font-size: var(--font-2xs);
         }
     }
 </style>
